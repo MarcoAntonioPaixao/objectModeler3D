@@ -1,0 +1,11 @@
+canvas {
+  border: 1px solid black;
+}
+
+p {
+  margin: 1em;
+}
+
+.hide {
+  display: none;
+}
