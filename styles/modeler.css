@@ -9,3 +9,7 @@ p {
 .hide {
   display: none;
 }
+
+.selected {
+  background-color: rgb(68, 163, 39);
+}

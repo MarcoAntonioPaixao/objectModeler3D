@@ -1,35 +1,112 @@
+//selecting elements
+const objectDetails = document.getElementById('objectDetails');
+const fileButtons = document.getElementById('optionButtons');
+
+const saveSceneButton = document.getElementById('saveScene');
+const loadSceneButton = document.getElementById('loadScene');
+const generateObjectButton = document.getElementById('generateObject');
+
+const rotationAngleField = document.getElementById('revolutionRotationAngle');
+const rotationAxisField = document.getElementById('revolutionRotationAxis');
+const numberSectionsField = document.getElementById('numberSections');
+
+const scaleButton = document.getElementById('scaleButton');
+const scaleDetails = document.getElementById('scaleDetails');
+const xScale = document.getElementById('xTranslation');
+const yScale = document.getElementById('yTranslation');
+const zScale = document.getElementById('zScale');
+const executeScaleButton = document.getElementById('executeScaleButton');
+
 //initialize all canvas
+function addMarkings(context, canvas) {
+  context.lineWidth = .1;
+  context.beginPath();
+  context.moveTo(canvas.width/2, 0);
+  context.lineTo(canvas.width/2, canvas.height);
+  context.moveTo(0, canvas.height/2);
+  context.lineTo(canvas.width, canvas.height/2);
+  context.stroke();
+  context.lineWidth = 1;
+}
+
+
+let drawingOnFrontCanvas = false;
 const frontCanvas = document.getElementById('frontCanvas');
 const frontContext = frontCanvas.getContext('2d');
+
+const altura = frontCanvas.height;
+const largura = frontCanvas.width;
+
 function initFrontCanvas() {
   frontCanvas.width = 2 * (window.innerWidth / 5);
   frontCanvas.height = 2 * (window.innerHeight / 5);
-  //frontContext.viewport(0, 0, 2* (window.innerWidth / 5), 2*(window.innerHeight / 5));
   frontContext.strokeStyle = 'black';
+  addMarkings(frontContext, frontCanvas);
   frontContext.lineWidth = 1;
-  // frontContext.clearColor(0.0, 0.0, 0.0, 1.0);
-  // frontContext.clear(frontContext.COLOR_BUFFER_BIT);
 }
 
+frontCanvas.addEventListener('click', function() {
+  drawingOnFrontCanvas = true;
+  drawingOnSideCanvas = false;
+  drawingOnAboveCanvas = false;
+  getCoord(event, frontContext);
+})
+
+frontCanvas.addEventListener('mouseout', function() {
+  if(drawingOnFrontCanvas) {
+    objectDetails.classList.remove('hide');
+  }
+})
+
+
+let drawingOnSideCanvas = false;
 const sideCanvas = document.getElementById('sideCanvas');
 const sideContext = sideCanvas.getContext('2d');
 function initSideCanvas() {
   sideCanvas.width = 2 * (window.innerWidth / 5);
   sideCanvas.height = 2 * (window.innerHeight / 5);
-  //sideContext.viewport(0, 0, 2* (window.innerWidth / 5), 2*(window.innerHeight / 5));
   sideContext.strokeStyle = 'black';
+  addMarkings(sideContext, sideCanvas);
   sideContext.lineWidth = 1;
 }
 
+sideCanvas.addEventListener('click', function() {
+  drawingOnSideCanvas = true;
+  drawingOnAboveCanvas = false;
+  drawingOnFrontCanvas = false;
+  getCoord(event, sideContext);
+})
+
+sideCanvas.addEventListener('mouseout', function() {
+  if(drawingOnSideCanvas) {
+    objectDetails.classList.remove('hide');
+  }
+})
+
+
+let drawingOnAboveCanvas = false;
 const aboveCanvas = document.getElementById('aboveCanvas');
 const aboveContext = aboveCanvas.getContext('2d');
 function initAboveCanvas() {
   aboveCanvas.width = 2 * (window.innerWidth / 5);
   aboveCanvas.height = 2 * (window.innerHeight / 5);
-  //aboveContext.viewport(0, 0, 2* (window.innerWidth / 5), 2*(window.innerHeight / 5));
   aboveContext.strokeStyle = 'black';
+  addMarkings(aboveContext, aboveCanvas);
   aboveContext.lineWidth = 1;
 }
+
+aboveCanvas.addEventListener('click', function() {
+  drawingOnAboveCanvas = true;
+  drawingOnFrontCanvas = false;
+  drawingOnSideCanvas = false;
+  getCoord(event, aboveContext);
+})
+
+aboveCanvas.addEventListener('mouseout', function() {
+  if(drawingOnAboveCanvas) {
+    objectDetails.classList.remove('hide');
+  }
+})
 
 const profileCanvas = document.getElementById('profileCanvas');
 const profileContext = profileCanvas.getContext('webgl');
@@ -41,24 +118,28 @@ function initProfileCanvas() {
   profileContext.lineWidth = 1;
 }
 
-const beginnerCanvas = document.getElementById('beginnerCanvas');
-const beginnerContext = beginnerCanvas.getContext('2d');
-function initBegginerCanvas() {
-  beginnerCanvas.width = 2 * (window.innerWidth / 5);
-  beginnerCanvas.height = 2 * (window.innerHeight / 5);
-  beginnerContext.strokeStyle = 'black';
-  beginnerContext.lineWidth = 1;
-  addMarkingsBeginnerCanvas(beginnerContext);
-}
-
-function addMarkingsBeginnerCanvas(context) {
-  context.beginPath();
-  context.moveTo(beginnerCanvas.width / 2, 0);
-  context.lineTo(beginnerCanvas.width / 2, beginnerCanvas.height);
-  context.moveTo(0, beginnerCanvas.height / 2);
-  context.lineTo(beginnerCanvas.width, beginnerCanvas.height / 2);
-  context.stroke();
-}
+generateObjectButton.addEventListener('click', function() {
+  rotationAxis = rotationAxisField.value;
+  numberSections = numberSectionsField.value;
+  rotationAngle = rotationAngleField.value;
+  //add data gathering from html and how to pass the data to the set object data function
+  //converts coordinates of points and stores them on the vertices array
+  setObjectData();
+  //turns the 2d vertices to 3d by adding the last coordinate with the value of 0 
+  //depends on which coordinates where entered xy, xz, yz 
+  convertVerticesTo3d();
+  //execute the rotation
+  transformObjectTo3d();
+  //debugger;
+  drawFrontVista();
+  drawSideVista();
+  drawAboveVista();
+  objectDetails.classList.add('hide');
+  drawingOnAboveCanvas = false;
+  drawingOnFrontCanvas = false;
+  drawingOnSideCanvas = false;
+  pointArray = [];
+})
 
 
 let vertices = [];
@@ -74,6 +155,13 @@ class point3d {
     this.coordX = x;
     this.coordY = y;
     this.coordZ = z;
+  }
+}
+
+class point2d {
+  constructor(x, y) {
+    this.coordX = x;
+    this.coordY = y;
   }
 }
 
@@ -97,31 +185,50 @@ class wingedEdge {
 //     this.objects.push(x);
 //   }
 // }
+function getCoord(event, context) {
+  let clickedPoint = new point2d();
+  clickedPoint.coordX = event.offsetX;// - beginnerCanvas.width/2;
+  clickedPoint.coordY = event.offsetY;// - beginnerCanvas.height/2) * (-1);
+  console.log("x coords: " + clickedPoint.coordX + ", y coords: " + clickedPoint.coordY);
+  storePoint(clickedPoint, context);
+}
 
-function getObjectData() {
-  const numVertices = parseInt(localStorage['numVertices']);
+function storePoint(point, context) {
+  pointArray.push(point);
+  if(pointArray.length === 2){
+    console.log('reached this point');
+    context.beginPath();
+    drawLine(pointArray, context);
+  }else if(pointArray.length > 2) {
+    drawLine(pointArray, context);
+  }
+}
+
+function drawLine(pointArray, context) {
+  const index = pointArray.length - 1;
+  context.moveTo(pointArray[index-1].coordX, pointArray[index-1].coordY);
+  context.lineTo(pointArray[index].coordX, pointArray[index].coordY);
+  context.stroke();
+}
+
+function setObjectData() {
+  const numVertices = pointArray.length;
+  //global array containing vertices with converted coordinates
   vertices = [];
 
   let x = 0;
   let y = 0;
 
-  altura = parseInt(localStorage.getItem('altura'));
-  largura = parseInt(localStorage.getItem('largura'));
-
   for (let i = 0; i < numVertices; i++) {
-    x = parseInt(localStorage[i.toString()]); // - profileCanvas.width/2);
-    y = parseInt(localStorage[i.toString() + i.toString()]); // - profileCanvas.height/2) * (-1);
-    console.log("x coords: " + x + ", y coords: " + y);
-
-    x = (parseInt(localStorage[i.toString()]) - profileCanvas.width / 2);
-    y = (parseInt(localStorage[i.toString() + i.toString()]) - profileCanvas.height / 2) * (-1);
-    console.log("x coords: " + x + ", y coords: " + y);
+    console.log("Before Conversion: x coords: " + pointArray[i].coordX + ", y coords: " + pointArray[i].coordY);
+    x = (pointArray[i].coordX - aboveCanvas.width / 2);
+    y = (pointArray[i].coordY - aboveCanvas.height / 2) * (-1);
+    console.log("After Conversion: x coords: " + x + ", y coords: " + y);
+    console.log("Converted to Canvas x: " + convertXtoCanvas(x) + " y: " + convertYtoCanvas(y));
     let tempPoint = new point();
     tempPoint.coordX = x;
     tempPoint.coordY = y;
     vertices.push(tempPoint);
-
-    //console.log("x coords: " + convertXtoCanvas(x) + ", y coords: " + convertYtoCanvas(y));
   }
 
   rotationAxis = localStorage.getItem('axis');
@@ -136,17 +243,30 @@ function cleanAllCanvas() {
 }
 
 function convertVerticesTo3d() {
-  for (let i = 0; i < vertices.length; i++) {
-    initial3dVertices.push(new point3d(vertices[i].coordX, vertices[i].coordY, 0));
+  if(drawingOnFrontCanvas){
+    for (let i = 0; i < vertices.length; i++) {
+      initial3dVertices.push(new point3d(vertices[i].coordX, vertices[i].coordY, 0));
+    }
+  } 
+  else if (drawingOnAboveCanvas) {
+    for (let i = 0; i < vertices.length; i++) {
+      initial3dVertices.push(new point3d(vertices[i].coordX, 0, vertices[i].coordY));
+    }
+  } 
+  else if (drawingOnSideCanvas) {
+    for (let i = 0; i < vertices.length; i++) {
+      initial3dVertices.push(new point3d(0, vertices[i].coordY, vertices[i].coordX));
+    }
   }
+  
 }
 
 function convertXtoCanvas(value) {
-  return value + largura / 2;
+  return value + frontCanvas.width / 2;
 }
 
 function convertYtoCanvas(value) {
-  return (value * -1) + altura / 2;
+  return (value * -1) + frontCanvas.height / 2;
 }
 
 function degreeToRadian(degrees){
@@ -322,6 +442,8 @@ function derivePointsX(pointsToBeCalculated, angleBetweenPoints, initial3dVertic
 }
 
 function drawFrontVista() {
+  frontContext.clearRect(0, 0, frontCanvas.width, frontCanvas.height);
+  addMarkings(frontContext, frontCanvas);
   //desenhar as arestas
   frontContext.beginPath();
   for (let i = 0; i < Scene.objects.length; i++) {
@@ -336,6 +458,8 @@ function drawFrontVista() {
 }
 
 function drawSideVista() {
+  sideContext.clearRect(0, 0, sideCanvas.width, sideCanvas.height);
+  addMarkings(sideContext, sideCanvas);
   //desenhar as arestas
   sideContext.beginPath();
   for (let i = 0; i < Scene.objects.length; i++) {
@@ -350,6 +474,8 @@ function drawSideVista() {
 }
 
 function drawAboveVista() {
+  aboveContext.clearRect(0, 0, aboveCanvas.width, aboveCanvas.height);
+  addMarkings(aboveContext, aboveCanvas);
   //desenhar as arestas
   aboveContext.beginPath();
   for (let i = 0; i < Scene.objects.length; i++) {
@@ -398,12 +524,11 @@ function executeTranslation(coordX, coordY, coordZ) {
 }
 
 //initializing variables
+let pointArray = [];
 let rotationAxis = 0;
 let numberSections = 0;
 let rotationAngle = 0;
-//medidas do canvas
-let altura = 0;
-let largura = 0;
+
 //vertices from the 2d profile converted to 3d
 let initial3dVertices = [];
 //modeled object
@@ -416,92 +541,11 @@ let Scene = {
   objects: []
 };
 
-//selecting elements
-const objectDetails = document.getElementById('objectDetails');
-const fileButtons = document.getElementById('optionButtons');
-
-const drawNewButton = document.getElementById('drawNew');
-const saveSceneButton = document.getElementById('saveScene');
-const loadSceneButton = document.getElementById('loadScene');
-const generateObjectButton = document.getElementById('generateObject');
-const transformationButton = document.getElementById('transformationButton');
-
-const transformationOptions = document.getElementById('transformationOptions');
-const rotationButton = document.getElementById('rotationButton');
-const rotationDetails = document.getElementById('rotationDetails');
-const rotationAngleField = document.getElementById('rotationAngle');
-const rotationAxisField = document.getElementById('rotationAxis');
-const executeRotationButton = document.getElementById('executeRotationButton');
-
-const translationButton = document.getElementById('translationButton');
-const translationDetails = document.getElementById('translationDetails');
-const xTranslation = document.getElementById('xTranslation');
-const yTranslation = document.getElementById('yTranslation');
-const zTranslation = document.getElementById('zTranslation');
-const executeTranslationButton = document.getElementById('executeTranslationButton');
-
-const scaleButton = document.getElementById('scaleButton');
-const scaleDetails = document.getElementById('scaleDetails');
-const xScale = document.getElementById('xTranslation');
-const yScale = document.getElementById('yTranslation');
-const zScale = document.getElementById('zScale');
-const executeScaleButton = document.getElementById('executeScaleButton');
-
-
-//adding event listeners
-drawNewButton.addEventListener('click', function () {
-  beginnerCanvas.classList.toggle('hide');
-  objectDetails.classList.toggle('hide');
-});
-
-generateObjectButton.addEventListener('click', function () {
-  beginnerCanvas.classList.toggle('hide');
-  objectDetails.classList.toggle('hide');
-});
-
-transformationButton.addEventListener('click', function() {
-  transformationOptions.classList.toggle('hide');
-});
-
-rotationButton.addEventListener('click', function() {
-  rotationDetails.classList.toggle('hide');
-});
-
-translationButton.addEventListener('click', function() {
-  translationDetails.classList.toggle('hide');
-});
-
-scaleButton.addEventListener('click', function() {
-  scaleDetails.classList.toggle('hide');
-});
-
-executeRotationButton.addEventListener('click', function() {
-  //executeRotation(rotationAxisField.value, rotationAngleField.value);
-});
-
-executeTranslationButton.addEventListener('click', function() {
-  debugger;
-  executeTranslation(parseInt(xTranslation.value), parseInt(yTranslation.value), parseInt(zTranslation.value));
-  translationDetails.classList.toggle('hide');
-});
-
-executeScaleButton.addEventListener('click', function() {
-  //executeScale(xScale.value, yScale.value, zScale.value);
-});
-
 //beginning execution when the page loads
 initFrontCanvas();
 initSideCanvas();
 initAboveCanvas();
 initProfileCanvas();
-initBegginerCanvas();
-getObjectData();
-convertVerticesTo3d();
-transformObjectTo3d();
-//debugger;
-drawFrontVista();
-drawSideVista();
-drawAboveVista();
 
 let originalObjects = {
   objects: []

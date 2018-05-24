@@ -6,38 +6,29 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Computacao Grafica Trabalho - tela do objeto</title>
   <link rel="stylesheet" href="./lib/bootstrap.min.css">
+  <!-- <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous"> -->
   <link rel="stylesheet" href="./styles/modeler.css">
 </head>
 <body>
   <div class="container-fluid row justify-content-center">
-      <p>Frente</p> 
-      <p>Lado</p> 
-  </div>
+    <div class="col-sm border">
+      Modo de Manipulação:
+      <button class="btn btn-light selected" id="select"> Selecionar</button>
+      <button class="btn btn-light shadow" id="rotate"> Rotacionar</button>
+      <button class="btn btn-light shadow" id="scale"> Escala</button>
+    </div>
 
-  <div class="container-fluid row justify-content-center">
-      <canvas id="frontCanvas"></canvas>
-      <canvas id="sideCanvas"></canvas>
-  </div>
-
-  <div class="container-fluid row justify-content-center">
-    <canvas id="aboveCanvas"></canvas>
-    <canvas id="profileCanvas"></canvas>
-  </div>
-
-  <div class="container-fluid row justify-content-center">
-      <p>De Cima</p> 
-      <p>Perfil</p> 
-  </div>
-
-  <div class="container-fluid row justify-content-center" id="optionButtons">
-    <button class="btn btn-primary shadow" id="transformationButton">Aplicar Transformações no objeto</button>
-    <button class="btn btn-secondary shadow" id="drawNew">Desenhar Novo Objeto</button>
-    <button class="btn btn-success shadow" id="saveScene">Salvar a Cena</button>
-    <button class="btn btn-warning shadow" id="loadScene">Usar outra Cena</button>
-  </div>
-
-  <div class="container-fluid row justify-content-center">
-    <canvas id="beginnerCanvas" class="hide"></canvas>
+    <div class="col-sm border">
+      Renderização:
+      <button class="btn btn-light selected" id="noOcultation"> Sem Ocultação</button>
+      <button class="btn btn-light shadow" id="withOcultation"> Com Ocultação</button>
+    </div>
+      
+    <div class="col-sm border">
+      Opções:
+      <button class="btn btn-success shadow" id="saveScene">Salvar a Cena</button>
+      <button class="btn btn-warning shadow" id="loadScene">Usar outra Cena</button>
+    </div>
   </div>
 
   <div id="objectDetails" class="hide">
@@ -60,62 +51,30 @@
     </div>
 
     <div class="container-fluid row justify-content-center">
-        <button class="btn btn-primary shadow" id="cleanCanvas">Limpar a Tela</button>
-        <button class="btn btn-primary shadow" id="generateObject">Gerar Objeto</button>
+      <button class="btn btn-primary shadow" id="cleanCanvas">Limpar a Tela</button>
+      <button class="btn btn-primary shadow" id="generateObject">Gerar Objeto</button>
     </div>
   </div>
 
-  <div class="container-fluid row justify-content-center hide" id="transformationOptions">
-      <button class="btn btn-primary shadow" id="rotationButton">Rotação</button>
-      <button class="btn btn-secondary shadow" id="translationButton">Translação</button>
-      <button class="btn btn-success shadow" id="scaleButton">Escala</button>
+  <div class="container-fluid row justify-content-center">
+    <p>Frente</p> 
+    <p>Lado</p> 
   </div>
 
-  <div class="container-fluid row justify-content-center hide" id="rotationDetails">
-    <div class="container-fluid row justify-content-center"> 
-      <p>Selecione o eixo de rotação:</p><br>
-      <select name="axis" id="rotationAxis">
-        <option value="x">X</option>
-        <option value="y">Y</option>
-        <option value="z">Z</option>
-      </select>
-    </div>
-  
-    <div class="container-fluid row justify-content-center">
-      Ângulo de rotação:
-      <input type="number" placeholder="0 - 360 graus" id="rotationAngle">
-    </div>
-
-    <div class="container-fluid row justify-content-center">
-      <button class="btn btn-success shadow" id="executeRotationButton">Fazer a Rotação</button>
-    </div>
+  <div class="container-fluid row justify-content-center">
+    <canvas id="frontCanvas"></canvas>
+    <canvas id="sideCanvas"></canvas>
   </div>
 
-  <div class="container-fluid row justify-content-center hide" id="translationDetails">
-    <div class="container-fluid row justify-content-center">
-      <p>Entre com a Translação Desejada:</p><br>
-      <input type="number" placeholder="x" id="xTranslation">
-      <input type="number" placeholder="y" id="yTranslation">
-      <input type="number" placeholder="z" id="zTranslation">
-    </div>
-
-    <div class="container-fluid row justify-content-center">
-      <button class="btn btn-success shadow" id="executeTranslationButton">Fazer a Translação</button>
-    </div>
+  <div class="container-fluid row justify-content-center">
+    <canvas id="aboveCanvas"></canvas>
+    <canvas id="profileCanvas"></canvas>
   </div>
 
-  <div class="container-fluid row justify-content-center hide" id="scaleDetails">
-    <div class="container-fluid row justify-content-center">
-      <p>Entre com a Escala Desejada:</p><br>
-      <input type="number" placeholder="x" id="xScale">
-      <input type="number" placeholder="y" id="yScale">
-      <input type="number" placeholder="z" id="zScale">
-    </div>
-
-    <div class="container-fluid row justify-content-center">
-      <button class="btn btn-success shadow" id="executeScaleButton">Fazer a Escala</button>
-    </div>
-  </div>
+  <div class="container-fluid row justify-content-center">
+    <p>De Cima</p> 
+    <p>Perfil</p> 
+  </div> 
 
   <script src="./src/modeler.js"></script>
 </body>
