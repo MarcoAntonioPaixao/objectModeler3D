@@ -45,19 +45,82 @@ function initFrontCanvas() {
   frontContext.lineWidth = 1;
 }
 
-frontCanvas.addEventListener('click', function() {
-  drawingOnFrontCanvas = true;
-  drawingOnSideCanvas = false;
-  drawingOnAboveCanvas = false;
-  getCoord(event, frontContext);
-})
+// frontCanvas.addEventListener('click', function() {
+//   drawingOnFrontCanvas = true;
+//   drawingOnSideCanvas = false;
+//   drawingOnAboveCanvas = false;
+//   storePoint(getCoord(event, frontContext), frontContext)
+// });
 
 frontCanvas.addEventListener('mouseout', function() {
   if(drawingOnFrontCanvas) {
     objectDetails.classList.remove('hide');
   }
-})
+});
 
+let lastX;
+let lastY;
+frontCanvas.addEventListener('mousedown', function() {
+  event.preventDefault();
+  event.stopPropagation();
+  let clickedPoint = getCoord(event, frontContext);
+  console.log('clicked point X: ' + clickedPoint.coordX);
+  console.log('clicked point Y: ' + clickedPoint.coordY);
+  lastX = convertFromCanvasX(clickedPoint.coordX);
+  lastY = convertFromCanvasY(clickedPoint.coordY);
+  //if on select mode
+  selectedObject = 10000; 
+  selectedObject = lookForClosestPoint(clickedPoint, frontContext);
+  if(selectedObject < 10000) {
+    isDown = true;
+  } else {
+    //if did not click on an existing object
+    drawingOnFrontCanvas = true;
+    drawingOnSideCanvas = false;
+    drawingOnAboveCanvas = false;
+    storePoint(getCoord(event, frontContext), frontContext);
+  }
+});
+
+frontCanvas.addEventListener('mousemove', function() {
+  event.preventDefault();
+  event.stopPropagation();
+  if(!isDown) {
+    return;
+  }
+  let auxiliaryPoint = getCoord(event, frontContext);
+  //get mouse position
+  // let currentX = convertFromCanvasX(event.clientX);
+  // let currentY = convertFromCanvasY(event.clientY);
+  let currentX = convertFromCanvasX(auxiliaryPoint.coordX);
+  let currentY = convertFromCanvasY(auxiliaryPoint.coordY);
+  console.log('current X: ' + currentX);
+  console.log('current Y:' + currentY);
+  //get difference between current position and last position
+  let differenceX = currentX - lastX;
+  let differenceY = currentY - lastY;
+  console.log('last X: ' + lastX);
+  console.log('last Y:' + lastY);
+  console.log('difference X: ' + differenceX);
+  console.log('difference Y:' + differenceY);
+  //execute translation
+  console.log('selected object: ' + selectedObject);
+  executeTranslation(differenceX, differenceY, 0, selectedObject);
+  lastX = currentX;
+  lastY = currentY;
+
+  //redraw everything
+  cleanAllCanvas();
+  drawFrontVista();
+  drawSideVista();
+  drawAboveVista();
+});
+
+frontCanvas.addEventListener('mouseup', function() {
+  event.preventDefault();
+  event.stopPropagation();
+  isDown = false;
+});
 
 let drawingOnSideCanvas = false;
 const sideCanvas = document.getElementById('sideCanvas');
@@ -74,7 +137,7 @@ sideCanvas.addEventListener('click', function() {
   drawingOnSideCanvas = true;
   drawingOnAboveCanvas = false;
   drawingOnFrontCanvas = false;
-  getCoord(event, sideContext);
+  storePoint(getCoord(event, sideContext), sideContext)
 })
 
 sideCanvas.addEventListener('mouseout', function() {
@@ -99,7 +162,7 @@ aboveCanvas.addEventListener('click', function() {
   drawingOnAboveCanvas = true;
   drawingOnFrontCanvas = false;
   drawingOnSideCanvas = false;
-  getCoord(event, aboveContext);
+  storePoint(getCoord(event, aboveContext), aboveContext);
 })
 
 aboveCanvas.addEventListener('mouseout', function() {
@@ -130,7 +193,6 @@ generateObjectButton.addEventListener('click', function() {
   convertVerticesTo3d();
   //execute the rotation
   transformObjectTo3d();
-  //debugger;
   drawFrontVista();
   drawSideVista();
   drawAboveVista();
@@ -138,7 +200,10 @@ generateObjectButton.addEventListener('click', function() {
   drawingOnAboveCanvas = false;
   drawingOnFrontCanvas = false;
   drawingOnSideCanvas = false;
+  initial3dVertices = [];
   pointArray = [];
+  object3d.verticesList = [];
+  object3d.arestasList = [];
 })
 
 
@@ -190,7 +255,8 @@ function getCoord(event, context) {
   clickedPoint.coordX = event.offsetX;// - beginnerCanvas.width/2;
   clickedPoint.coordY = event.offsetY;// - beginnerCanvas.height/2) * (-1);
   console.log("x coords: " + clickedPoint.coordX + ", y coords: " + clickedPoint.coordY);
-  storePoint(clickedPoint, context);
+  //storePoint(clickedPoint, context);
+  return clickedPoint;
 }
 
 function storePoint(point, context) {
@@ -202,6 +268,55 @@ function storePoint(point, context) {
   }else if(pointArray.length > 2) {
     drawLine(pointArray, context);
   }
+}
+
+function lookForClosestPoint(clickedPoint, context) {
+  let closestObjectIndex = 10000;
+  //console.log('selected object original: ' + closestObjectIndex);
+  let closestObjectDistance = 10000;
+  for (let i = 0; i < Scene.objects.length; i++) {
+    for (let j = 0; j < Scene.objects[i].verticesList.length; j++) {
+        for (let k = 0; k < Scene.objects[i].verticesList[j].length; k++) {
+          //console.log('Distance is: ' + getDistance(clickedPoint, Scene.objects[i].verticesList[j][k], context));
+          //console.log('current selected object is: ' + closestObjectIndex);
+        if(getDistance(clickedPoint, Scene.objects[i].verticesList[j][k], context) < closestObjectDistance &&
+        getDistance(clickedPoint, Scene.objects[i].verticesList[j][k], context) < 5) {
+          closestObjectIndex = i;
+          //console.log('selected object change: ' + closestObjectIndex);
+          closestObjectDistance = getDistance(clickedPoint, Scene.objects[i].verticesList[j][k], context);
+        }
+      }
+    }
+  }
+  //console.log('selected object: ' + closestObjectIndex);
+  return closestObjectIndex;
+}
+
+//distance is being calculated wrongly vertice is a 3d point while clickedPoint is a 2d one
+function getDistance(clickedPoint, vertice, context) {
+  console.log('the clicked point x is: ' + convertFromCanvasX(clickedPoint.coordX));
+  console.log('the clicked point y is: ' + convertFromCanvasY(clickedPoint.coordY));
+  console.log('vertice evaluated x: ' + vertice.coordX);
+  console.log('vertice evaluated y: ' + vertice.coordY);
+
+  if(context === frontContext) {
+    return Math.sqrt( Math.pow((convertFromCanvasX(clickedPoint.coordX) - vertice.coordX), 2) + 
+    Math.pow((convertFromCanvasY(clickedPoint.coordY) - vertice.coordY), 2) + 
+    Math.pow((0 - vertice.coordZ), 2));
+  }
+
+  if(context === sideContext) {
+    return Math.sqrt( Math.pow((0 - vertice.coordX), 2) + 
+    Math.pow((convertFromCanvasY(clickedPoint.coordY) - vertice.coordY), 2) + 
+    Math.pow((convertFromCanvasX(clickedPoint.coordX) - vertice.coordZ), 2));
+  }
+
+  if(context === aboveContext) {
+    return Math.sqrt( Math.pow((convertFromCanvasX(clickedPoint.coordX) - vertice.coordX), 2) + 
+    Math.pow((0 - vertice.coordY), 2) + 
+    Math.pow((convertFromCanvasY(clickedPoint.coordY) - vertice.coordZ), 2));
+  }
+  
 }
 
 function drawLine(pointArray, context) {
@@ -221,8 +336,8 @@ function setObjectData() {
 
   for (let i = 0; i < numVertices; i++) {
     console.log("Before Conversion: x coords: " + pointArray[i].coordX + ", y coords: " + pointArray[i].coordY);
-    x = (pointArray[i].coordX - aboveCanvas.width / 2);
-    y = (pointArray[i].coordY - aboveCanvas.height / 2) * (-1);
+    x = convertFromCanvasX(pointArray[i].coordX);
+    y = convertFromCanvasY(pointArray[i].coordY);
     console.log("After Conversion: x coords: " + x + ", y coords: " + y);
     console.log("Converted to Canvas x: " + convertXtoCanvas(x) + " y: " + convertYtoCanvas(y));
     let tempPoint = new point();
@@ -230,10 +345,6 @@ function setObjectData() {
     tempPoint.coordY = y;
     vertices.push(tempPoint);
   }
-
-  rotationAxis = localStorage.getItem('axis');
-  numberSections = parseInt(localStorage.getItem('sections'));
-  rotationAngle = parseInt(localStorage.getItem('angle'));
 }
 
 function cleanAllCanvas() {
@@ -269,6 +380,14 @@ function convertYtoCanvas(value) {
   return (value * -1) + frontCanvas.height / 2;
 }
 
+function convertFromCanvasX(value) {
+  return value - aboveCanvas.width / 2;
+}
+
+function convertFromCanvasY(value) {
+  return (value - aboveCanvas.height / 2) * (-1);
+}
+
 function degreeToRadian(degrees){
   return degrees * (Math.PI/180);
 }
@@ -285,6 +404,7 @@ function detectRotationAxis() {
 }
 
 function revolutionY() {
+  console.log('Rotation in y');
   //definig how many points to be calculated
   let pointsToBeCalculated = numberSections;
   if (rotationAngle === 360)
@@ -321,7 +441,6 @@ function derivePointsY(pointsToBeCalculated, angleBetweenPoints, initial3dVertic
 
   derivedVertices.push(new point3d(initial3dVertice.coordX, initial3dVertice.coordY, initial3dVertice.coordZ));
 
-  //debugger;
   for (let k = 0; k < pointsToBeCalculated; k++) {
     //calculate each point based on last points coordinates
     let x = calculateX(calculationMatrix, lastPoint);
@@ -389,6 +508,7 @@ function defineArestas(object3d) {
 }
 
 function revolutionX() {
+  console.log('Rotation in x');
   //definig how many points to be calculated
   let pointsToBeCalculated = numberSections;
   if (rotationAngle === 360)
@@ -425,7 +545,6 @@ function derivePointsX(pointsToBeCalculated, angleBetweenPoints, initial3dVertic
 
   derivedVertices.push(new point3d(initial3dVertice.coordX, initial3dVertice.coordY, initial3dVertice.coordZ));
 
-  //debugger;
   for (let k = 0; k < pointsToBeCalculated; k++) {
     //calculate each point based on last points coordinates
     let x = calculateX(calculationMatrix, lastPoint);
@@ -489,38 +608,33 @@ function drawAboveVista() {
   aboveContext.stroke();
 }
 
-function executeTranslation(coordX, coordY, coordZ) {
+function executeTranslation(coordX, coordY, coordZ, objectIndex) {
   const calculationMatrix = [
     [1, 0, 0, coordX],
     [0, 1, 0, coordY],
     [0, 0, 1, coordZ],
     [0, 0, 0, 1]];
 
-  let numObjects = Scene.objects.length;
-  debugger;
-  //calculate the new points
-  for (let i = 0; i < numObjects; i++) {
-    let pointsToBeCalculated = Scene.objects[i].verticesList.length;
-    for(let j = 0; j < pointsToBeCalculated; j++) {
-      for(let k = 0; k < Scene.objects[i].verticesList[0].length; k++){
-        //for each object calculate all points
-        let x = calculateX(calculationMatrix, Scene.objects[i].verticesList[j][k]);
-        let y = calculateY(calculationMatrix, Scene.objects[i].verticesList[j][k]);
-        let z = calculateZ(calculationMatrix, Scene.objects[i].verticesList[j][k]);
+  // console.log('coordX: ' + coordX);
+  // console.log('coordY: ' + coordY);
+  // console.log('coordZ: ' + coordZ);
+  // console.log('object Index: ' + objectIndex);
+  //calculate the new points of the object
+  let pointsToBeCalculated = Scene.objects[objectIndex].verticesList.length;
+  for(let j = 0; j < pointsToBeCalculated; j++) {
+    for(let k = 0; k < Scene.objects[objectIndex].verticesList[0].length; k++){
+      //for each object calculate all points
+      let x = calculateX(calculationMatrix, Scene.objects[objectIndex].verticesList[j][k]);
+      let y = calculateY(calculationMatrix, Scene.objects[objectIndex].verticesList[j][k]);
+      let z = calculateZ(calculationMatrix, Scene.objects[objectIndex].verticesList[j][k]);
 
-        //modify point with new coordinates
-        Scene.objects[i].verticesList[j][k].coordX = x;
-        Scene.objects[i].verticesList[j][k].coordY = y;
-        Scene.objects[i].verticesList[j][k].coordZ = z;
-      }
+      //modify point with new coordinates
+      Scene.objects[objectIndex].verticesList[j][k].coordX = x;
+      Scene.objects[objectIndex].verticesList[j][k].coordY = y;
+      Scene.objects[objectIndex].verticesList[j][k].coordZ = z;
     }
   }
-
-  //draw new objects
-    cleanAllCanvas();
-    drawFrontVista();
-    drawSideVista();
-    drawAboveVista();
+    
 }
 
 //initializing variables
@@ -528,6 +642,10 @@ let pointArray = [];
 let rotationAxis = 0;
 let numberSections = 0;
 let rotationAngle = 0;
+let selectedObject;
+let isDown = false;
+// let offsetX;
+// let offsetY;
 
 //vertices from the 2d profile converted to 3d
 let initial3dVertices = [];
@@ -550,6 +668,9 @@ initProfileCanvas();
 let originalObjects = {
   objects: []
 }
+
+//TODO - add drag and drop functionality to the objects, add scale, add rotation
+//modify distance check to only include original vertices and their mirrored versions
 
 //saving original coordinates of the object for preservation in case of transformations
 originalObjects.objects.push(new wingedEdge(object3d.verticesList, object3d.arestasList));
