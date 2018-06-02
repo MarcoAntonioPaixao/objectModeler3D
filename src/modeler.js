@@ -6,6 +6,7 @@ const scaleButton = document.getElementById('scale');
 
 const saveSceneButton = document.getElementById('saveScene');
 const loadSceneButton = document.getElementById('loadScene');
+const fileElem = document.getElementById('fileElem');
 const generateObjectButton = document.getElementById('generateObject');
 
 const rotationAngleField = document.getElementById('revolutionRotationAngle');
@@ -41,6 +42,49 @@ function initFrontCanvas() {
   frontContext.strokeStyle = 'black';
   addMarkings(frontContext, frontCanvas);
   frontContext.lineWidth = 1;
+}
+
+loadSceneButton.addEventListener('click', function(e) {
+  if (fileElem) {
+    fileElem.click();
+  }
+
+}, false);
+//loadSceneButton.onchange=pullFiles;
+
+
+
+function handleFiles(files) {
+  debugger;
+  let file = files[0];
+  let fileReader = new FileReader();
+  fileReader.readAsText(file);
+
+  fileReader.onload = function(event) {
+    console.log('this is the read string from the json file: ' + event.target.result);
+    Scene = JSON.parse(fileReader.result);
+    cleanAllCanvas();
+    drawFrontVista();
+    drawSideVista();
+    drawAboveVista();
+  }
+
+  
+  //console.log(file.name);
+}
+
+saveSceneButton.addEventListener('click', function(e) {
+  let sceneJSON = JSON.stringify(Scene);
+  let fileName = prompt("Please enter the filename.");
+  //console.log('This is the saved data: ' + sceneJSON);
+  saveText(sceneJSON, fileName+".json");
+});
+
+function saveText(text, filename){
+  var a = document.createElement('a');
+  a.setAttribute('href', 'data:text/plain;charset=utf-u,'+encodeURIComponent(text));
+  a.setAttribute('download', filename);
+  a.click()
 }
 
 selectButton.addEventListener('click', function() {
@@ -197,13 +241,6 @@ function initSideCanvas() {
   sideContext.lineWidth = 1;
 }
 
-// sideCanvas.addEventListener('click', function() {
-//   drawingOnSideCanvas = true;
-//   drawingOnAboveCanvas = false;
-//   drawingOnFrontCanvas = false;
-//   storePoint(getCoord(event, sideContext), sideContext)
-// });
-
 sideCanvas.addEventListener('mousedown', function() {
   event.preventDefault();
   event.stopPropagation();
@@ -317,13 +354,6 @@ function initAboveCanvas() {
   addMarkings(aboveContext, aboveCanvas);
   aboveContext.lineWidth = 1;
 }
-
-// aboveCanvas.addEventListener('click', function() {
-//   drawingOnAboveCanvas = true;
-//   drawingOnFrontCanvas = false;
-//   drawingOnSideCanvas = false;
-//   storePoint(getCoord(event, aboveContext), aboveContext);
-// })
 
 aboveCanvas.addEventListener('mousedown', function() {
   event.preventDefault();
@@ -509,41 +539,6 @@ class wingedEdge {
     this.centerPoint = defineCenterPoint(this);
   }
 
-  // defineCenterPoint(verticesList) {
-  //   this.zMenor = verticesList[0].coordZ;
-  //   this.zMaior = verticesList[0].coordZ; 
-  //   this.yMenor = verticesList[0].coordY;
-  //   this.yMaior = verticesList[0].coordY;
-  //   this.xMenor = verticesList[0].coordX;
-  //   this.xMaior = verticesList[0].coordX;
-
-  //   for(let i = 0; i < verticesList.length; i++) {
-  //     for(let j = 0; j < verticesList[i].length; j++) {
-
-  //       if(verticesList[i][j].coordX > this.xMaior) {
-  //         this.xMaior = verticesList[i][j].coordX;
-  //       } else if(verticesList[i][j].coordX < this.xMenor) {
-  //         this.xMenor = verticesList[i][j].coordX;
-  //       }
-  
-  //       if(verticesList[i][j].coordY > this.yMaior) {
-  //         this.yMaior = verticesList[i][j].coordY;
-  //       } else if(verticesList[i][j].coordY < this.yMenor) {
-  //         this.yMenor = verticesList[i][j].coordY;
-  //       }
-  
-  //       if(verticesList[i][j].coordZ > this.zMaior) {
-  //         this.zMaior = verticesList[i][j].coordZ;
-  //       } else if(verticesList[i][j].coordZ < this.zMenor) {
-  //         this.zMenor = verticesList[i][j].coordZ;
-  //       }
-  //     }
-      
-    //   return new point3d((this.xMaior + this.xMenor)/2,
-    //   (this.yMaior + this.yMenor)/2,
-    //   (this.zMaior + this.zMenor)/2);
-    // }
-  //}
 }
 
 function isIncreasingScale(lastX, lastY, currentX, currentY) {
@@ -581,12 +576,6 @@ function defineCenterPoint(object) {
     (object.yMaior + object.yMenor)/2,
     (object.zMaior + object.zMenor)/2);
 }
-
-// class scene {
-//   constructor(x) {
-//     this.objects.push(x);
-//   }
-// }
 
 function getRatioX(distanceBetweenPoints) {
   return ((distanceBetweenPoints * 100) / 
@@ -630,8 +619,8 @@ function lookForClosestPoint(clickedPoint, context) {
   for (let i = 0; i < Scene.objects.length; i++) {
     for (let j = 0; j < Scene.objects[i].verticesList.length; j++) {
         for (let k = 0; k < Scene.objects[i].verticesList[j].length; k++) {
-          //console.log('Distance is: ' + getDistance(clickedPoint, Scene.objects[i].verticesList[j][k], context));
-          //console.log('current selected object is: ' + closestObjectIndex);
+          console.log('Distance is: ' + getDistance(clickedPoint, Scene.objects[i].verticesList[j][k], context));
+          console.log('current selected object is: ' + closestObjectIndex);
         if(getDistance(clickedPoint, Scene.objects[i].verticesList[j][k], context) < closestObjectDistance &&
         getDistance(clickedPoint, Scene.objects[i].verticesList[j][k], context) < TOLERANCE_ERROR) {
           closestObjectIndex = i;
