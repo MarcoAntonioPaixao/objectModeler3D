@@ -647,29 +647,24 @@ function lookForClosestPoint(clickedPoint, context) {
 
 //distance is being calculated wrongly vertice is a 3d point while clickedPoint is a 2d one
 function getDistance(clickedPoint, vertice, context) {
-  console.log('the clicked point x is: ' + convertFromCanvasX(clickedPoint.coordX));
-  console.log('the clicked point y is: ' + convertFromCanvasY(clickedPoint.coordY));
-  console.log('vertice evaluated x: ' + vertice.coordX);
-  console.log('vertice evaluated y: ' + vertice.coordY);
 
   if(context === frontContext) {
     return Math.sqrt( Math.pow((convertFromCanvasX(clickedPoint.coordX) - vertice.coordX), 2) + 
     Math.pow((convertFromCanvasY(clickedPoint.coordY) - vertice.coordY), 2) + 
-    Math.pow((0 - vertice.coordZ), 2));
+    Math.pow((0 - 0), 2));
   }
 
   if(context === sideContext) {
-    return Math.sqrt( Math.pow((0 - vertice.coordX), 2) + 
+    return Math.sqrt( Math.pow((0 - 0), 2) + 
     Math.pow((convertFromCanvasY(clickedPoint.coordY) - vertice.coordY), 2) + 
     Math.pow((convertFromCanvasX(clickedPoint.coordX) - vertice.coordZ), 2));
   }
 
   if(context === aboveContext) {
     return Math.sqrt( Math.pow((convertFromCanvasX(clickedPoint.coordX) - vertice.coordX), 2) + 
-    Math.pow((0 - vertice.coordY), 2) + 
+    Math.pow((0 - 0), 2) + 
     Math.pow((convertFromCanvasY(clickedPoint.coordY) - vertice.coordZ), 2));
   }
-  
 }
 
 function drawLine(pointArray, context) {
