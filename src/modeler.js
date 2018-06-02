@@ -43,12 +43,6 @@ function initFrontCanvas() {
   frontContext.lineWidth = 1;
 }
 
-// frontCanvas.addEventListener('click', function() {
-//   drawingOnFrontCanvas = true;
-//   drawingOnSideCanvas = false;
-//   drawingOnAboveCanvas = false;
-//   storePoint(getCoord(event, frontContext), frontContext)
-// });
 selectButton.addEventListener('click', function() {
   modeSelect = true;
   modeScale = false;
@@ -56,6 +50,10 @@ selectButton.addEventListener('click', function() {
   selectButton.classList.add('selected');
   scaleButton.classList.remove('selected');
   rotateButton.classList.remove('selected');
+
+  selectButton.classList.remove('shadow');
+  scaleButton.classList.add('shadow');
+  rotateButton.classList.add('shadow');
 });
 
 scaleButton.addEventListener('click', function() {
@@ -65,6 +63,10 @@ scaleButton.addEventListener('click', function() {
   selectButton.classList.remove('selected');
   scaleButton.classList.add('selected');
   rotateButton.classList.remove('selected');
+
+  selectButton.classList.add('shadow');
+  scaleButton.classList.remove('shadow');
+  rotateButton.classList.add('shadow');
 });
 
 rotateButton.addEventListener('click', function() {
@@ -74,6 +76,10 @@ rotateButton.addEventListener('click', function() {
   selectButton.classList.remove('selected');
   scaleButton.classList.remove('selected');
   rotateButton.classList.add('selected');
+
+  selectButton.classList.add('shadow');
+  scaleButton.classList.add('shadow');
+  rotateButton.classList.remove('shadow');
 });
 
 frontCanvas.addEventListener('mouseout', function() {
@@ -118,26 +124,15 @@ frontCanvas.addEventListener('mousemove', function() {
   //get difference between current position and last position
   let differenceX = currentX - lastX;
   let differenceY = currentY - lastY;
-  // console.log('last X: ' + lastX);
-  // console.log('last Y:' + lastY);
-  // console.log('difference X: ' + differenceX);
-  // console.log('difference Y:' + differenceY);
-  //console.log('selected object: ' + selectedObject);
-  //execute translation
-  debugger;
+  
   if(modeSelect) {
     executeTranslation(differenceX, differenceY, 0, selectedObject);
   } else if(modeScale) {
     let distanceBetweenPoints = Math.sqrt( Math.pow(differenceX, 2) + Math.pow(differenceY, 2) );
-    console.log('distance between points is: ' + distanceBetweenPoints );
-    // let mediumAxisDistance = (Scene.objects[selectedObject].xMaior - Scene.objects[selectedObject].xMenor +
-    // Scene.objects[selectedObject].yMaior - Scene.objects[selectedObject].yMenor +
-    // Scene.objects[selectedObject].zMaior - Scene.objects[selectedObject].zMenor)/3;
-    // console.log('medium axis distance is: ' + mediumAxisDistance );
 
-    let ratio;
     if(distanceBetweenPoints === 0) {
       executeScale(1, 1, 1, selectedObject);
+      Scene.objects[selectedObject].centerPoint = defineCenterPoint(Scene.objects[selectedObject]);
     }else{
       //first execute translation putting the object's center in the center(0, 0, 0)
       executeTranslation(0 - Scene.objects[selectedObject].centerPoint.coordX,
@@ -156,10 +151,23 @@ frontCanvas.addEventListener('mousemove', function() {
       executeTranslation(0 + Scene.objects[selectedObject].centerPoint.coordX,
         0 + Scene.objects[selectedObject].centerPoint.coordY,
         0 + Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
-    }
+
+      }
     
   } else if(modeRotation) {
-
+    let angleInRad = Math.atan2(differenceY, differenceX);
+    if(lastX >= 0) {
+      if(lastY < currentY)
+        executeRotationZ(angleInRad, selectedObject);
+      else
+        executeRotationZ(angleInRad, selectedObject); 
+    } else {
+      if(lastY < currentY)
+        executeRotationZ(angleInRad * (-1), selectedObject);
+      else
+        executeRotationZ(angleInRad * (-1), selectedObject);
+    }
+    Scene.objects[selectedObject].centerPoint = defineCenterPoint(Scene.objects[selectedObject]);
   }
 
   lastX = currentX;
@@ -189,12 +197,108 @@ function initSideCanvas() {
   sideContext.lineWidth = 1;
 }
 
-sideCanvas.addEventListener('click', function() {
-  drawingOnSideCanvas = true;
-  drawingOnAboveCanvas = false;
-  drawingOnFrontCanvas = false;
-  storePoint(getCoord(event, sideContext), sideContext)
-})
+// sideCanvas.addEventListener('click', function() {
+//   drawingOnSideCanvas = true;
+//   drawingOnAboveCanvas = false;
+//   drawingOnFrontCanvas = false;
+//   storePoint(getCoord(event, sideContext), sideContext)
+// });
+
+sideCanvas.addEventListener('mousedown', function() {
+  event.preventDefault();
+  event.stopPropagation();
+  let clickedPoint = getCoord(event, sideContext);
+  console.log('clicked point X: ' + clickedPoint.coordX);//this is z actually
+  console.log('clicked point Y: ' + clickedPoint.coordY);
+  lastX = convertFromCanvasX(clickedPoint.coordX);
+  lastY = convertFromCanvasY(clickedPoint.coordY);
+  //if on select mode
+  selectedObject = 10000; 
+  selectedObject = lookForClosestPoint(clickedPoint, sideContext);
+  if(selectedObject < 10000) {
+    isDown = true;
+  } else {
+    //if did not click on an existing object
+    drawingOnFrontCanvas = false;
+    drawingOnSideCanvas = true;
+    drawingOnAboveCanvas = false;
+    storePoint(getCoord(event, sideContext), sideContext);
+  }
+});
+
+sideCanvas.addEventListener('mousemove', function() {
+  event.preventDefault();
+  event.stopPropagation();
+  if(!isDown) {
+    return;
+  }
+  let auxiliaryPoint = getCoord(event, sideContext);
+  let currentX = convertFromCanvasX(auxiliaryPoint.coordX);//this is actually z
+  let currentY = convertFromCanvasY(auxiliaryPoint.coordY);
+  //get difference between current position and last position
+  let differenceX = currentX - lastX;
+  let differenceY = currentY - lastY;
+  
+  if(modeSelect) {
+    executeTranslation(0, differenceY, differenceX, selectedObject);
+  } else if(modeScale) {
+    let distanceBetweenPoints = Math.sqrt( Math.pow(differenceX, 2) + Math.pow(differenceY, 2) );
+
+    if(distanceBetweenPoints === 0) {
+      executeScale(1, 1, 1, selectedObject);
+      Scene.objects[selectedObject].centerPoint = defineCenterPoint(Scene.objects[selectedObject]);
+    }else{
+      //first execute translation putting the object's center in the center(0, 0, 0)
+      executeTranslation(0 - Scene.objects[selectedObject].centerPoint.coordX,
+        0 - Scene.objects[selectedObject].centerPoint.coordY,
+        0 - Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+
+      if(isIncreasingScale(lastX, lastY, currentX, currentY)) {
+        executeScale(1 + getRatioX(distanceBetweenPoints), 1 + getRatioY(distanceBetweenPoints), 
+        1 + getRatioZ(distanceBetweenPoints), selectedObject);
+      } else {
+        executeScale(1 - getRatioX(distanceBetweenPoints), 1 - getRatioY(distanceBetweenPoints), 
+        1 - getRatioZ(distanceBetweenPoints), selectedObject);
+      }
+
+      //return to object's center to original position
+      executeTranslation(0 + Scene.objects[selectedObject].centerPoint.coordX,
+        0 + Scene.objects[selectedObject].centerPoint.coordY,
+        0 + Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+
+      }
+    
+  } else if(modeRotation) {
+    let angleInRad = Math.atan2(differenceY, differenceX);
+    if(lastX >= 0) {
+      if(lastY < currentY)
+        executeRotationX(angleInRad * (-1), selectedObject);
+      else
+        executeRotationX(angleInRad * (-1), selectedObject); 
+    } else {
+      if(lastY < currentY)
+        executeRotationX(angleInRad , selectedObject);
+      else
+        executeRotationX(angleInRad , selectedObject);
+    }
+    Scene.objects[selectedObject].centerPoint = defineCenterPoint(Scene.objects[selectedObject]);
+  }
+
+  lastX = currentX;
+  lastY = currentY;
+
+  //redraw everything
+  cleanAllCanvas();
+  drawFrontVista();
+  drawSideVista();
+  drawAboveVista();
+});
+
+sideCanvas.addEventListener('mouseup', function() {
+  event.preventDefault();
+  event.stopPropagation();
+  isDown = false;
+});
 
 sideCanvas.addEventListener('mouseout', function() {
   if(drawingOnSideCanvas) {
@@ -214,18 +318,114 @@ function initAboveCanvas() {
   aboveContext.lineWidth = 1;
 }
 
-aboveCanvas.addEventListener('click', function() {
-  drawingOnAboveCanvas = true;
-  drawingOnFrontCanvas = false;
-  drawingOnSideCanvas = false;
-  storePoint(getCoord(event, aboveContext), aboveContext);
-})
+// aboveCanvas.addEventListener('click', function() {
+//   drawingOnAboveCanvas = true;
+//   drawingOnFrontCanvas = false;
+//   drawingOnSideCanvas = false;
+//   storePoint(getCoord(event, aboveContext), aboveContext);
+// })
+
+aboveCanvas.addEventListener('mousedown', function() {
+  event.preventDefault();
+  event.stopPropagation();
+  let clickedPoint = getCoord(event, aboveContext);
+  console.log('clicked point X: ' + clickedPoint.coordX);
+  console.log('clicked point Y: ' + clickedPoint.coordY);//this is z actually
+  lastX = convertFromCanvasX(clickedPoint.coordX);
+  lastY = convertFromCanvasY(clickedPoint.coordY);
+  //if on select mode
+  selectedObject = 10000; 
+  selectedObject = lookForClosestPoint(clickedPoint, aboveContext);
+  if(selectedObject < 10000) {
+    isDown = true;
+  } else {
+    //if did not click on an existing object
+    drawingOnFrontCanvas = false;
+    drawingOnSideCanvas = false;
+    drawingOnAboveCanvas = true;
+    storePoint(getCoord(event, aboveContext), aboveContext);
+  }
+});
+
+aboveCanvas.addEventListener('mousemove', function() {
+  event.preventDefault();
+  event.stopPropagation();
+  if(!isDown) {
+    return;
+  }
+  let auxiliaryPoint = getCoord(event, aboveContext);
+  let currentX = convertFromCanvasX(auxiliaryPoint.coordX);
+  let currentY = convertFromCanvasY(auxiliaryPoint.coordY);//this is actually z
+  //get difference between current position and last position
+  let differenceX = currentX - lastX;
+  let differenceY = currentY - lastY;
+  
+  if(modeSelect) {
+    executeTranslation(differenceX, 0, differenceY, selectedObject);
+  } else if(modeScale) {
+    let distanceBetweenPoints = Math.sqrt( Math.pow(differenceX, 2) + Math.pow(differenceY, 2) );
+
+    if(distanceBetweenPoints === 0) {
+      executeScale(1, 1, 1, selectedObject);
+      Scene.objects[selectedObject].centerPoint = defineCenterPoint(Scene.objects[selectedObject]);
+    }else{
+      //first execute translation putting the object's center in the center(0, 0, 0)
+      executeTranslation(0 - Scene.objects[selectedObject].centerPoint.coordX,
+        0 - Scene.objects[selectedObject].centerPoint.coordY,
+        0 - Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+
+      if(isIncreasingScale(lastX, lastY, currentX, currentY)) {
+        executeScale(1 + getRatioX(distanceBetweenPoints), 1 + getRatioY(distanceBetweenPoints), 
+        1 + getRatioZ(distanceBetweenPoints), selectedObject);
+      } else {
+        executeScale(1 - getRatioX(distanceBetweenPoints), 1 - getRatioY(distanceBetweenPoints), 
+        1 - getRatioZ(distanceBetweenPoints), selectedObject);
+      }
+
+      //return to object's center to original position
+      executeTranslation(0 + Scene.objects[selectedObject].centerPoint.coordX,
+        0 + Scene.objects[selectedObject].centerPoint.coordY,
+        0 + Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+
+      }
+    
+  } else if(modeRotation) {
+    let angleInRad = Math.atan2(differenceY, differenceX);
+    if(lastX >= 0) {
+      if(lastY < currentY)
+        executeRotationY(angleInRad * (-1), selectedObject);
+      else
+        executeRotationY(angleInRad * (-1), selectedObject); 
+    } else {
+      if(lastY < currentY)
+        executeRotationY(angleInRad , selectedObject);
+      else
+        executeRotationY(angleInRad , selectedObject);
+    }
+    Scene.objects[selectedObject].centerPoint = defineCenterPoint(Scene.objects[selectedObject]);
+  }
+
+  lastX = currentX;
+  lastY = currentY;
+
+  //redraw everything
+  cleanAllCanvas();
+  drawFrontVista();
+  drawSideVista();
+  drawAboveVista();
+});
+
+aboveCanvas.addEventListener('mouseup', function() {
+  event.preventDefault();
+  event.stopPropagation();
+  isDown = false;
+});
 
 aboveCanvas.addEventListener('mouseout', function() {
   if(drawingOnAboveCanvas) {
     objectDetails.classList.remove('hide');
   }
-})
+});
 
 const profileCanvas = document.getElementById('profileCanvas');
 const profileContext = profileCanvas.getContext('webgl');
@@ -811,6 +1011,88 @@ function executeScale(ratioX, ratioY, ratioZ, objectIndex) {
     }
   } 
 }
+
+function executeRotationZ(angle, objectIndex) {
+  //modiffy diference to equal the true scale in percentage
+  //must add the difference to the three axis
+
+  const calculationMatrix = [
+    [Math.cos(degreeToRadian(angle)), -Math.sin(degreeToRadian(angle)), 0, 0],
+    [Math.sin(degreeToRadian(angle)), Math.cos(degreeToRadian(angle)), 0, 0],
+    [0, 0, 1, 0],
+    [0, 0, 0, 1]];
+
+
+  let pointsToBeCalculated = Scene.objects[objectIndex].verticesList.length;
+  for(let j = 0; j < pointsToBeCalculated; j++) {
+    for(let k = 0; k < Scene.objects[objectIndex].verticesList[0].length; k++){
+      //for each object calculate all points
+      let x = calculateX(calculationMatrix, Scene.objects[objectIndex].verticesList[j][k]);
+      let y = calculateY(calculationMatrix, Scene.objects[objectIndex].verticesList[j][k]);
+      let z = calculateZ(calculationMatrix, Scene.objects[objectIndex].verticesList[j][k]);
+
+      //modify point with new coordinates
+      Scene.objects[objectIndex].verticesList[j][k].coordX = x;
+      Scene.objects[objectIndex].verticesList[j][k].coordY = y;
+      Scene.objects[objectIndex].verticesList[j][k].coordZ = z;
+    }
+  } 
+}
+
+function executeRotationY(angle, objectIndex) {
+  //modiffy diference to equal the true scale in percentage
+  //must add the difference to the three axis
+
+  const calculationMatrix = [
+    [1, 0, 0, 0],
+    [0, Math.cos(degreeToRadian(angle)), -Math.sin(degreeToRadian(angle)), 0],
+    [0, Math.sin(degreeToRadian(angle)), Math.cos(degreeToRadian(angle)), 0],
+    [0, 0, 0, 1]];
+
+
+  let pointsToBeCalculated = Scene.objects[objectIndex].verticesList.length;
+  for(let j = 0; j < pointsToBeCalculated; j++) {
+    for(let k = 0; k < Scene.objects[objectIndex].verticesList[0].length; k++){
+      //for each object calculate all points
+      let x = calculateX(calculationMatrix, Scene.objects[objectIndex].verticesList[j][k]);
+      let y = calculateY(calculationMatrix, Scene.objects[objectIndex].verticesList[j][k]);
+      let z = calculateZ(calculationMatrix, Scene.objects[objectIndex].verticesList[j][k]);
+
+      //modify point with new coordinates
+      Scene.objects[objectIndex].verticesList[j][k].coordX = x;
+      Scene.objects[objectIndex].verticesList[j][k].coordY = y;
+      Scene.objects[objectIndex].verticesList[j][k].coordZ = z;
+    }
+  } 
+}
+
+function executeRotationX(angle, objectIndex) {
+  //modiffy diference to equal the true scale in percentage
+  //must add the difference to the three axis
+
+  const calculationMatrix = [
+    [1, 0, 0, 0],
+    [0, Math.cos(degreeToRadian(angle)), -Math.sin(degreeToRadian(angle)), 0],
+    [0, Math.sin(degreeToRadian(angle)), Math.cos(degreeToRadian(angle)), 0],
+    [0, 0, 0, 1]];
+
+
+  let pointsToBeCalculated = Scene.objects[objectIndex].verticesList.length;
+  for(let j = 0; j < pointsToBeCalculated; j++) {
+    for(let k = 0; k < Scene.objects[objectIndex].verticesList[0].length; k++){
+      //for each object calculate all points
+      let x = calculateX(calculationMatrix, Scene.objects[objectIndex].verticesList[j][k]);
+      let y = calculateY(calculationMatrix, Scene.objects[objectIndex].verticesList[j][k]);
+      let z = calculateZ(calculationMatrix, Scene.objects[objectIndex].verticesList[j][k]);
+
+      //modify point with new coordinates
+      Scene.objects[objectIndex].verticesList[j][k].coordX = x;
+      Scene.objects[objectIndex].verticesList[j][k].coordY = y;
+      Scene.objects[objectIndex].verticesList[j][k].coordZ = z;
+    }
+  } 
+}
+
 
 //initializing variables
 let modeSelect = true;
