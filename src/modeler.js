@@ -1,13 +1,18 @@
 //selecting elements
 const objectDetails = document.getElementById('objectDetails');
 const selectButton = document.getElementById('select');
-const rotateButton = document.getElementById('rotate');
+const rotateHorizontalButton = document.getElementById('rotateHorizontal');
+const rotateVerticalButton = document.getElementById('rotateVertical');
 const scaleButton = document.getElementById('scale');
 
 const saveSceneButton = document.getElementById('saveScene');
 const loadSceneButton = document.getElementById('loadScene');
+const newSceneButton = document.getElementById('newScene');
 const fileElem = document.getElementById('fileElem');
 const generateObjectButton = document.getElementById('generateObject');
+
+const noOcultationButton = document.getElementById('noOcultation');
+const withOcultationButton = document.getElementById('withOcultation');
 
 const rotationAngleField = document.getElementById('revolutionRotationAngle');
 const rotationAxisField = document.getElementById('revolutionRotationAxis');
@@ -50,12 +55,11 @@ loadSceneButton.addEventListener('click', function(e) {
   }
 
 }, false);
-//loadSceneButton.onchange=pullFiles;
 
 
 
 function handleFiles(files) {
-  debugger;
+  
   let file = files[0];
   let fileReader = new FileReader();
   fileReader.readAsText(file);
@@ -64,13 +68,13 @@ function handleFiles(files) {
     console.log('this is the read string from the json file: ' + event.target.result);
     Scene = JSON.parse(fileReader.result);
     cleanAllCanvas();
+    initFrontCanvas();
+    initSideCanvas();
+    initAboveCanvas();
     drawFrontVista();
     drawSideVista();
     drawAboveVista();
   }
-
-  
-  //console.log(file.name);
 }
 
 saveSceneButton.addEventListener('click', function(e) {
@@ -80,6 +84,19 @@ saveSceneButton.addEventListener('click', function(e) {
   saveText(sceneJSON, fileName+".json");
 });
 
+newSceneButton.addEventListener('click', function() {
+  Scene.objects = [];
+  originalObjects.objects = [];
+  cleanAllCanvas();
+  initAboveCanvas();
+  initFrontCanvas();
+  initSideCanvas();
+  objectDetails.classList.add('hide');
+  drawingOnAboveCanvas = false;
+  drawingOnFrontCanvas = false;
+  drawingOnSideCanvas = false;
+});
+
 function saveText(text, filename){
   var a = document.createElement('a');
   a.setAttribute('href', 'data:text/plain;charset=utf-u,'+encodeURIComponent(text));
@@ -87,43 +104,86 @@ function saveText(text, filename){
   a.click()
 }
 
+noOcultationButton.addEventListener('click', function() {
+  noOcultation = true;
+  noOcultationButton.classList.add('selected');
+  noOcultationButton.classList.remove('shadow');
+  withOcultation = false;
+  withOcultationButton.classList.remove('selected');
+  withOcultationButton.classList.add('shadow');
+});
+
+withOcultationButton.addEventListener('click', function() {
+  withOcultation = true;
+  withOcultationButton.classList.add('selected');
+  withOcultationButton.classList.remove('shadow');
+  noOcultation = false;
+  noOcultationButton.classList.remove('selected');
+  noOcultationButton.classList.add('shadow');
+});
+
 selectButton.addEventListener('click', function() {
   modeSelect = true;
   modeScale = false;
-  modeRotation = false;
+  modeRotationVertical = false;
+  modeRotationHorizontal = false;
   selectButton.classList.add('selected');
   scaleButton.classList.remove('selected');
-  rotateButton.classList.remove('selected');
+  rotateHorizontalButton.classList.remove('selected');
+  rotateVerticalButton.classList.remove('selected');
 
   selectButton.classList.remove('shadow');
   scaleButton.classList.add('shadow');
-  rotateButton.classList.add('shadow');
+  rotateHorizontalButton.classList.add('shadow');
+  rotateVerticalButton.classList.add('shadow');
 });
 
 scaleButton.addEventListener('click', function() {
   modeSelect = false;
   modeScale = true;
-  modeRotation = false;
+  modeRotationVertical = false;
+  modeRotationHorizontal = false;
   selectButton.classList.remove('selected');
   scaleButton.classList.add('selected');
-  rotateButton.classList.remove('selected');
+  rotateHorizontalButton.classList.remove('selected');
+  rotateVerticalButton.classList.remove('selected');
 
   selectButton.classList.add('shadow');
   scaleButton.classList.remove('shadow');
-  rotateButton.classList.add('shadow');
+  rotateHorizontalButton.classList.add('shadow');
+  rotateVerticalButton.classList.add('shadow');
 });
 
-rotateButton.addEventListener('click', function() {
+rotateHorizontalButton.addEventListener('click', function() {
   modeSelect = false;
   modeScale = false;
-  modeRotation = true;
+  modeRotationVertical = false;
+  modeRotationHorizontal = true;
   selectButton.classList.remove('selected');
   scaleButton.classList.remove('selected');
-  rotateButton.classList.add('selected');
+  rotateHorizontalButton.classList.add('selected');
+  rotateVerticalButton.classList.remove('selected');
 
   selectButton.classList.add('shadow');
   scaleButton.classList.add('shadow');
-  rotateButton.classList.remove('shadow');
+  rotateHorizontalButton.classList.remove('shadow');
+  rotateVerticalButton.classList.add('shadow');
+});
+
+rotateVerticalButton.addEventListener('click', function() {
+  modeSelect = false;
+  modeScale = false;
+  modeRotationVertical = true;
+  modeRotationHorizontal = false;
+  selectButton.classList.remove('selected');
+  scaleButton.classList.remove('selected');
+  rotateHorizontalButton.classList.remove('selected');
+  rotateVerticalButton.classList.add('selected');
+
+  selectButton.classList.add('shadow');
+  scaleButton.classList.add('shadow');
+  rotateHorizontalButton.classList.add('shadow');
+  rotateVerticalButton.classList.remove('shadow');
 });
 
 frontCanvas.addEventListener('mouseout', function() {
@@ -198,19 +258,63 @@ frontCanvas.addEventListener('mousemove', function() {
 
       }
     
-  } else if(modeRotation) {
+  } else if(modeRotationHorizontal || modeRotationVertical) {
     let angleInRad = Math.atan2(differenceY, differenceX);
-    if(lastX >= 0) {
-      if(lastY < currentY)
-        executeRotationZ(angleInRad, selectedObject);
-      else
-        executeRotationZ(angleInRad, selectedObject); 
-    } else {
-      if(lastY < currentY)
-        executeRotationZ(angleInRad * (-1), selectedObject);
-      else
-        executeRotationZ(angleInRad * (-1), selectedObject);
-    }
+    
+      if(modeRotationHorizontal){
+        if(lastX < currentX){
+          executeTranslation(0 - Scene.objects[selectedObject].centerPoint.coordX,
+            0 - Scene.objects[selectedObject].centerPoint.coordY,
+            0 - Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+  
+          angleInRad = Math.atan2(differenceX, differenceY);
+          executeRotationY(angleInRad * (-1), selectedObject);
+  
+          executeTranslation(0 + Scene.objects[selectedObject].centerPoint.coordX,
+            0 + Scene.objects[selectedObject].centerPoint.coordY,
+            0 + Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+  
+        }else if(lastX >= currentX){
+          angleInRad = Math.atan2(differenceX, differenceY);
+          executeTranslation(0 - Scene.objects[selectedObject].centerPoint.coordX,
+            0 - Scene.objects[selectedObject].centerPoint.coordY,
+            0 - Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+  
+          executeRotationY(angleInRad * (-1), selectedObject);
+  
+          executeTranslation(0 + Scene.objects[selectedObject].centerPoint.coordX,
+            0 + Scene.objects[selectedObject].centerPoint.coordY,
+            0 + Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+        }
+      }else {
+        if(lastY < currentY){
+          //angleInRad = Math.atan2(differenceX, differenceY);
+          executeTranslation(0 - Scene.objects[selectedObject].centerPoint.coordX,
+            0 - Scene.objects[selectedObject].centerPoint.coordY,
+            0 - Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+  
+          executeRotationX(angleInRad * (-1), selectedObject); //
+  
+          executeTranslation(0 + Scene.objects[selectedObject].centerPoint.coordX,
+            0 + Scene.objects[selectedObject].centerPoint.coordY,
+            0 + Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+  
+        }else if(lastY >= currentY) {
+          angleInRad = Math.atan2(differenceX, differenceY);
+  
+          executeTranslation(0 - Scene.objects[selectedObject].centerPoint.coordX,
+            0 - Scene.objects[selectedObject].centerPoint.coordY,
+            0 - Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+  
+          executeRotationX(angleInRad, selectedObject); //* (-1)
+  
+          executeTranslation(0 + Scene.objects[selectedObject].centerPoint.coordX,
+            0 + Scene.objects[selectedObject].centerPoint.coordY,
+            0 + Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+        }
+      }
+      
+        
     Scene.objects[selectedObject].centerPoint = defineCenterPoint(Scene.objects[selectedObject]);
   }
 
@@ -305,19 +409,71 @@ sideCanvas.addEventListener('mousemove', function() {
 
       }
     
-  } else if(modeRotation) {
+  } else if(modeRotationHorizontal || modeRotationVertical) {
     let angleInRad = Math.atan2(differenceY, differenceX);
-    if(lastX >= 0) {
-      if(lastY < currentY)
-        executeRotationX(angleInRad * (-1), selectedObject);
-      else
-        executeRotationX(angleInRad * (-1), selectedObject); 
-    } else {
-      if(lastY < currentY)
-        executeRotationX(angleInRad , selectedObject);
-      else
-        executeRotationX(angleInRad , selectedObject);
-    }
+    // if(lastX >= 0) {
+    //   if(lastY < currentY)
+    //     executeRotationZ(angleInRad, selectedObject);
+    //   else
+    //     executeRotationZ(angleInRad, selectedObject); 
+    // } else {
+    //   if(lastY < currentY)
+    //     executeRotationZ(angleInRad * (-1), selectedObject);
+    //   else
+    //     executeRotationZ(angleInRad * (-1), selectedObject);
+    // }
+      if(modeRotationHorizontal){
+        if(lastX < currentX){
+          executeTranslation(0 - Scene.objects[selectedObject].centerPoint.coordX,
+            0 - Scene.objects[selectedObject].centerPoint.coordY,
+            0 - Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+  
+          angleInRad = Math.atan2(differenceX, differenceY);
+          executeRotationY(angleInRad * (-1), selectedObject);
+  
+          executeTranslation(0 + Scene.objects[selectedObject].centerPoint.coordX,
+            0 + Scene.objects[selectedObject].centerPoint.coordY,
+            0 + Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+  
+        }else if(lastX >= currentX){
+          angleInRad = Math.atan2(differenceX, differenceY);
+          executeTranslation(0 - Scene.objects[selectedObject].centerPoint.coordX,
+            0 - Scene.objects[selectedObject].centerPoint.coordY,
+            0 - Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+  
+          executeRotationY(angleInRad * (-1), selectedObject);
+  
+          executeTranslation(0 + Scene.objects[selectedObject].centerPoint.coordX,
+            0 + Scene.objects[selectedObject].centerPoint.coordY,
+            0 + Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+        }
+      }else {
+        if(lastY < currentY){
+          //angleInRad = Math.atan2(differenceX, differenceY);
+          executeTranslation(0 - Scene.objects[selectedObject].centerPoint.coordX,
+            0 - Scene.objects[selectedObject].centerPoint.coordY,
+            0 - Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+  
+          executeRotationZ(angleInRad * (-1), selectedObject); //
+  
+          executeTranslation(0 + Scene.objects[selectedObject].centerPoint.coordX,
+            0 + Scene.objects[selectedObject].centerPoint.coordY,
+            0 + Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+  
+        }else if(lastY >= currentY) {
+          angleInRad = Math.atan2(differenceX, differenceY);
+  
+          executeTranslation(0 - Scene.objects[selectedObject].centerPoint.coordX,
+            0 - Scene.objects[selectedObject].centerPoint.coordY,
+            0 - Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+  
+          executeRotationZ(angleInRad, selectedObject); //* (-1)
+  
+          executeTranslation(0 + Scene.objects[selectedObject].centerPoint.coordX,
+            0 + Scene.objects[selectedObject].centerPoint.coordY,
+            0 + Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+        }
+      }
     Scene.objects[selectedObject].centerPoint = defineCenterPoint(Scene.objects[selectedObject]);
   }
 
@@ -419,19 +575,61 @@ aboveCanvas.addEventListener('mousemove', function() {
 
       }
     
-  } else if(modeRotation) {
+  } else if(modeRotationHorizontal || modeRotationVertical) {
     let angleInRad = Math.atan2(differenceY, differenceX);
-    if(lastX >= 0) {
-      if(lastY < currentY)
-        executeRotationY(angleInRad * (-1), selectedObject);
-      else
-        executeRotationY(angleInRad * (-1), selectedObject); 
-    } else {
-      if(lastY < currentY)
-        executeRotationY(angleInRad , selectedObject);
-      else
-        executeRotationY(angleInRad , selectedObject);
-    }
+    
+      if(modeRotationHorizontal){
+        if(lastX < currentX){
+          executeTranslation(0 - Scene.objects[selectedObject].centerPoint.coordX,
+            0 - Scene.objects[selectedObject].centerPoint.coordY,
+            0 - Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+  
+          angleInRad = Math.atan2(differenceX, differenceY);
+          executeRotationZ(angleInRad * (-1), selectedObject);
+  
+          executeTranslation(0 + Scene.objects[selectedObject].centerPoint.coordX,
+            0 + Scene.objects[selectedObject].centerPoint.coordY,
+            0 + Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+  
+        }else if(lastX >= currentX){
+          angleInRad = Math.atan2(differenceX, differenceY);
+          executeTranslation(0 - Scene.objects[selectedObject].centerPoint.coordX,
+            0 - Scene.objects[selectedObject].centerPoint.coordY,
+            0 - Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+  
+          executeRotationZ(angleInRad * (-1), selectedObject);
+  
+          executeTranslation(0 + Scene.objects[selectedObject].centerPoint.coordX,
+            0 + Scene.objects[selectedObject].centerPoint.coordY,
+            0 + Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+        }
+      }else {
+        if(lastY < currentY){
+          //angleInRad = Math.atan2(differenceX, differenceY);
+          executeTranslation(0 - Scene.objects[selectedObject].centerPoint.coordX,
+            0 - Scene.objects[selectedObject].centerPoint.coordY,
+            0 - Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+  
+          executeRotationX(angleInRad * (-1), selectedObject); //
+  
+          executeTranslation(0 + Scene.objects[selectedObject].centerPoint.coordX,
+            0 + Scene.objects[selectedObject].centerPoint.coordY,
+            0 + Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+  
+        }else if(lastY >= currentY) {
+          angleInRad = Math.atan2(differenceX, differenceY);
+  
+          executeTranslation(0 - Scene.objects[selectedObject].centerPoint.coordX,
+            0 - Scene.objects[selectedObject].centerPoint.coordY,
+            0 - Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+  
+          executeRotationX(angleInRad, selectedObject); //
+  
+          executeTranslation(0 + Scene.objects[selectedObject].centerPoint.coordX,
+            0 + Scene.objects[selectedObject].centerPoint.coordY,
+            0 + Scene.objects[selectedObject].centerPoint.coordZ , selectedObject);
+        }
+      }
     Scene.objects[selectedObject].centerPoint = defineCenterPoint(Scene.objects[selectedObject]);
   }
 
@@ -526,10 +724,12 @@ class aresta {
 }
 
 class wingedEdge {
-  constructor(verticesList, arestasList) {
+  constructor(verticesList, arestasList, facesList, initialFace, lastFace) {
     this.verticesList = verticesList;
-    //this.facesList = facesList;
     this.arestasList = arestasList;
+    this.facesList = facesList;
+    this.initialFace = initialFace;
+    this.lastFace = lastFace;
     this.zMenor = 10000;
     this.zMaior = -10000; 
     this.yMenor = 10000;
@@ -624,8 +824,9 @@ function lookForClosestPoint(clickedPoint, context) {
         if(getDistance(clickedPoint, Scene.objects[i].verticesList[j][k], context) < closestObjectDistance &&
         getDistance(clickedPoint, Scene.objects[i].verticesList[j][k], context) < TOLERANCE_ERROR) {
           closestObjectIndex = i;
-          //console.log('selected object change: ' + closestObjectIndex);
+          console.log('selected object change: ' + closestObjectIndex);
           closestObjectDistance = getDistance(clickedPoint, Scene.objects[i].verticesList[j][k], context);
+          console.log('New closest Distance: ' + closestObjectDistance);
         }
       }
     }
@@ -634,7 +835,6 @@ function lookForClosestPoint(clickedPoint, context) {
   return closestObjectIndex;
 }
 
-//distance is being calculated wrongly vertice is a 3d point while clickedPoint is a 2d one
 function getDistance(clickedPoint, vertice, context) {
 
   if(context === frontContext) {
@@ -736,8 +936,10 @@ function transformObjectTo3d() {
 function detectRotationAxis() {
   if (rotationAxis === 'y')
     revolutionY();
-  else
+  else if (rotationAxis === 'x')
     revolutionX();
+  else
+    revolutionZ();
 }
 
 function revolutionY() {
@@ -760,9 +962,21 @@ function calculatePointsRotationY(pointsToBeCalculated, angleBetweenPoints) {
     object3d.verticesList.push(derivePointsY(pointsToBeCalculated, angleBetweenPoints, initial3dVertices[i]));
   }
 
+  //flags which define if there is "closing" faces on the object at the beginning and at the end
+  if( initial3dVertices[0].coordX === 0 ) {
+    object3d.initialFace = false;
+  }
+  
+  if( initial3dVertices[initial3dVertices.length-1].coordX === 0 ) {
+    object3d.lastFace = false;
+  }
+
+
   defineArestas(object3d);
-  debugger;
-  Scene.objects.push(new wingedEdge(object3d.verticesList, object3d.arestasList));
+  
+  //debugger;
+  Scene.objects.push(new wingedEdge(object3d.verticesList, object3d.arestasList, 
+    object3d.facesList, object3d.initialFace, object3d.lastFace));
 }
 
 function derivePointsY(pointsToBeCalculated, angleBetweenPoints, initial3dVertice) {
@@ -833,6 +1047,16 @@ function defineArestas(object3d) {
     for (let j = 0; j < columns; j++) {
       let tempAresta = new aresta(object3d.verticesList[i][j], object3d.verticesList[i][(j + 1) % columns]);
       object3d.arestasList.push(tempAresta);
+      //inserir aresta horizontal na lista de faces exceto as ultimas
+      if(! (i === rows -1 && object3d.lastFace === true) ) {
+        object3d.facesList.push(tempAresta);
+      }
+    
+      if((i===0 && j === 0) && object3d.initialFace === true)
+        object3d.facesList.push(tempAresta);
+
+      if((i === rows-1 && j === 0) && object3d.lastFace === true)
+        object3d.facesList.push(tempAresta);
     }
   }
 
@@ -843,6 +1067,7 @@ function defineArestas(object3d) {
       object3d.arestasList.push(tempAresta);
     }
   }
+
 }
 
 function revolutionX() {
@@ -865,8 +1090,18 @@ function calculatePointsRotationX(pointsToBeCalculated, angleBetweenPoints) {
     object3d.verticesList.push(derivePointsX(pointsToBeCalculated, angleBetweenPoints, initial3dVertices[i]));
   }
 
+  //flags which define if there is "closing" faces on the object at the beginning and at the end
+  if( initial3dVertices[0].coordY === 0 ) {
+    object3d.initialFace = false;
+  }
+  
+  if( initial3dVertices[initial3dVertices.length-1].coordY === 0 ) {
+    object3d.lastFace = false;
+  }
+
   defineArestas(object3d);
-  Scene.objects.push(new wingedEdge(object3d.verticesList, object3d.arestasList));
+  Scene.objects.push(new wingedEdge(object3d.verticesList, object3d.arestasList, 
+    object3d.facesList, object3d.initialFace, object3d.lastFace));
 }
 
 function derivePointsX(pointsToBeCalculated, angleBetweenPoints, initial3dVertice) {
@@ -898,52 +1133,130 @@ function derivePointsX(pointsToBeCalculated, angleBetweenPoints, initial3dVertic
   return derivedVertices;
 }
 
+function revolutionZ() {
+  console.log('Rotation in z');
+  //definig how many points to be calculated
+  let pointsToBeCalculated = numberSections;
+  if (rotationAngle === 360)
+    pointsToBeCalculated--;
+
+  //defining angle between each point
+  let angleBetweenPoints = rotationAngle / numberSections;
+
+  //calculate the new points
+  calculatePointsRotationZ(pointsToBeCalculated, angleBetweenPoints);
+}
+
+function calculatePointsRotationZ(pointsToBeCalculated, angleBetweenPoints) {
+  //for each point of the 2d profile calculate all points derived through revolution
+  for (let i = 0; i < initial3dVertices.length; i++) {
+    object3d.verticesList.push(derivePointsZ(pointsToBeCalculated, angleBetweenPoints, initial3dVertices[i]));
+  }
+
+  //flags which define if there is "closing" faces on the object at the beginning and at the end
+  if( initial3dVertices[0].coordZ === 0 ) {
+    object3d.initialFace = false;
+  }
+  
+  if( initial3dVertices[initial3dVertices.length-1].coordZ === 0 ) {
+    object3d.lastFace = false;
+  }
+
+  defineArestas(object3d);
+  Scene.objects.push(new wingedEdge(object3d.verticesList, object3d.arestasList, 
+    object3d.facesList, object3d.initialFace, object3d.lastFace));
+}
+
+function derivePointsZ(pointsToBeCalculated, angleBetweenPoints, initial3dVertice) {
+  let lastPoint = new point3d(initial3dVertice.coordX, initial3dVertice.coordY, initial3dVertice.coordZ);
+  //rotacao no eixo x anti horaria
+  let calculationMatrix = [
+  [Math.cos(degreeToRadian(angleBetweenPoints)), -Math.sin(degreeToRadian(angleBetweenPoints)), 0, 0],
+  [Math.sin(degreeToRadian(angleBetweenPoints)), Math.cos(degreeToRadian(angleBetweenPoints)), 0, 0],
+  [0, 0, 1, 0],
+  [0, 0, 0, 1]];
+  console.log(calculationMatrix);
+  const calculationMatrixColumns = 4;
+  let derivedVertices = [];
+
+  derivedVertices.push(new point3d(initial3dVertice.coordX, initial3dVertice.coordY, initial3dVertice.coordZ));
+
+  for (let k = 0; k < pointsToBeCalculated; k++) {
+    //calculate each point based on last points coordinates
+    let x = calculateX(calculationMatrix, lastPoint);
+    let y = calculateY(calculationMatrix, lastPoint);
+    let z = calculateZ(calculationMatrix, lastPoint);
+
+    //construct new 3d point and push the point to the temporary array
+    derivedVertices.push(new point3d(x, y, z));
+    lastPoint.coordX = x;
+    lastPoint.coordY = y;
+    lastPoint.coordZ = z;
+  }
+  return derivedVertices;
+}
+
 function drawFrontVista() {
   frontContext.clearRect(0, 0, frontCanvas.width, frontCanvas.height);
   addMarkings(frontContext, frontCanvas);
   //desenhar as arestas
-  frontContext.beginPath();
-  for (let i = 0; i < Scene.objects.length; i++) {
-    for (let j = 0; j < Scene.objects[i].arestasList.length; j++) {
-      frontContext.moveTo(convertXtoCanvas(Scene.objects[i].arestasList[j].point1.coordX),
-      convertYtoCanvas(Scene.objects[i].arestasList[j].point1.coordY));
-      frontContext.lineTo(convertXtoCanvas(Scene.objects[i].arestasList[j].point2.coordX),
-      convertYtoCanvas(Scene.objects[i].arestasList[j].point2.coordY));
+  if(noOcultation) {
+    frontContext.beginPath();
+    for (let i = 0; i < Scene.objects.length; i++) {
+      for (let j = 0; j < Scene.objects[i].arestasList.length; j++) {
+        frontContext.moveTo(convertXtoCanvas(Scene.objects[i].arestasList[j].point1.coordX),
+        convertYtoCanvas(Scene.objects[i].arestasList[j].point1.coordY));
+        frontContext.lineTo(convertXtoCanvas(Scene.objects[i].arestasList[j].point2.coordX),
+        convertYtoCanvas(Scene.objects[i].arestasList[j].point2.coordY));
+      }
     }
+    frontContext.stroke();
+  } else {
+    //draw only the visible faces from the front
   }
-  frontContext.stroke();
+  
 }
 
 function drawSideVista() {
   sideContext.clearRect(0, 0, sideCanvas.width, sideCanvas.height);
   addMarkings(sideContext, sideCanvas);
   //desenhar as arestas
-  sideContext.beginPath();
-  for (let i = 0; i < Scene.objects.length; i++) {
-    for (let j = 0; j < Scene.objects[i].arestasList.length; j++) {
-      sideContext.moveTo(convertXtoCanvas(Scene.objects[i].arestasList[j].point1.coordZ),
-      convertYtoCanvas(Scene.objects[i].arestasList[j].point1.coordY));
-      sideContext.lineTo(convertXtoCanvas(Scene.objects[i].arestasList[j].point2.coordZ),
-      convertYtoCanvas(Scene.objects[i].arestasList[j].point2.coordY));
+  if(noOcultation){
+    sideContext.beginPath();
+    for (let i = 0; i < Scene.objects.length; i++) {
+      for (let j = 0; j < Scene.objects[i].arestasList.length; j++) {
+        sideContext.moveTo(convertXtoCanvas(Scene.objects[i].arestasList[j].point1.coordZ),
+        convertYtoCanvas(Scene.objects[i].arestasList[j].point1.coordY));
+        sideContext.lineTo(convertXtoCanvas(Scene.objects[i].arestasList[j].point2.coordZ),
+        convertYtoCanvas(Scene.objects[i].arestasList[j].point2.coordY));
+      }
     }
+    sideContext.stroke();
+  } else {
+    //draw only the visible faces from the side
   }
-  sideContext.stroke();
+  
 }
 
 function drawAboveVista() {
   aboveContext.clearRect(0, 0, aboveCanvas.width, aboveCanvas.height);
   addMarkings(aboveContext, aboveCanvas);
   //desenhar as arestas
-  aboveContext.beginPath();
-  for (let i = 0; i < Scene.objects.length; i++) {
-    for (let j = 0; j < Scene.objects[i].arestasList.length; j++) {
-      aboveContext.moveTo(convertXtoCanvas(Scene.objects[i].arestasList[j].point1.coordX),
-      convertYtoCanvas(Scene.objects[i].arestasList[j].point1.coordZ));
-      aboveContext.lineTo(convertXtoCanvas(Scene.objects[i].arestasList[j].point2.coordX),
-      convertYtoCanvas(Scene.objects[i].arestasList[j].point2.coordZ));
+  if(noOcultation) {
+    aboveContext.beginPath();
+    for (let i = 0; i < Scene.objects.length; i++) {
+      for (let j = 0; j < Scene.objects[i].arestasList.length; j++) {
+        aboveContext.moveTo(convertXtoCanvas(Scene.objects[i].arestasList[j].point1.coordX),
+        convertYtoCanvas(Scene.objects[i].arestasList[j].point1.coordZ));
+        aboveContext.lineTo(convertXtoCanvas(Scene.objects[i].arestasList[j].point2.coordX),
+        convertYtoCanvas(Scene.objects[i].arestasList[j].point2.coordZ));
+      }
     }
+    aboveContext.stroke();
+  } else {
+    //draw only the visible faces from above
   }
-  aboveContext.stroke();
+  
 }
 
 function executeTranslation(coordX, coordY, coordZ, objectIndex) {
@@ -1026,11 +1339,11 @@ function executeRotationZ(angle, objectIndex) {
 function executeRotationY(angle, objectIndex) {
   //modiffy diference to equal the true scale in percentage
   //must add the difference to the three axis
-
+ //console.log('rotating on y');
   const calculationMatrix = [
-    [1, 0, 0, 0],
-    [0, Math.cos(degreeToRadian(angle)), -Math.sin(degreeToRadian(angle)), 0],
-    [0, Math.sin(degreeToRadian(angle)), Math.cos(degreeToRadian(angle)), 0],
+    [Math.cos(degreeToRadian(angle)), 0, Math.sin(degreeToRadian(angle)), 0],
+    [0, 1, 0, 0],
+    [-Math.sin(degreeToRadian(angle)), 0, Math.cos(degreeToRadian(angle)), 0],
     [0, 0, 0, 1]];
 
 
@@ -1088,20 +1401,29 @@ let numberSections = 0;
 let rotationAngle = 0;
 let selectedObject;
 let isDown = false;
-// let offsetX;
-// let offsetY;
+let withOcultation = false;
+let noOcultation = true;
 
 //vertices from the 2d profile converted to 3d
 let initial3dVertices = [];
 //modeled object
 let object3d = {
   verticesList: [],
-  arestasList: []
+  arestasList: [],
+  facesList: [],
+  initialFace: true,
+  lastFace: true
 };
 
 let Scene = {
   objects: []
 };
+
+const Camera = {
+  front: new point3d(0, 0, 350),
+  side: new point3d(350, 0, 0),
+  above: new point3d(0, 350, 0)
+}
 
 //beginning execution when the page loads
 initFrontCanvas();
@@ -1113,7 +1435,6 @@ let originalObjects = {
   objects: []
 }
 
-//TODO: select not working correctly on all vertices =>>>> depth problem!!!
 
 
 
