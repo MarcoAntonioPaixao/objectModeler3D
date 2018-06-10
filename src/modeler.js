@@ -18,7 +18,7 @@ const rotationAngleField = document.getElementById('revolutionRotationAngle');
 const rotationAxisField = document.getElementById('revolutionRotationAxis');
 const numberSectionsField = document.getElementById('numberSections');
 
-const TOLERANCE_ERROR = 10;
+const TOLERANCE_MARGIN = 10;
 
 
 //initialize all canvas
@@ -95,6 +95,8 @@ newSceneButton.addEventListener('click', function() {
   drawingOnAboveCanvas = false;
   drawingOnFrontCanvas = false;
   drawingOnSideCanvas = false;
+  initial3dVertice = [];
+  pointArray = [];
 });
 
 function saveText(text, filename){
@@ -111,6 +113,10 @@ noOcultationButton.addEventListener('click', function() {
   withOcultation = false;
   withOcultationButton.classList.remove('selected');
   withOcultationButton.classList.add('shadow');
+  cleanAllCanvas();
+  drawAboveVista();
+  drawFrontVista();
+  drawSideVista();
 });
 
 withOcultationButton.addEventListener('click', function() {
@@ -120,6 +126,10 @@ withOcultationButton.addEventListener('click', function() {
   noOcultation = false;
   noOcultationButton.classList.remove('selected');
   noOcultationButton.classList.add('shadow');
+  cleanAllCanvas();
+  drawAboveVista();
+  drawFrontVista();
+  drawSideVista();
 });
 
 selectButton.addEventListener('click', function() {
@@ -723,6 +733,16 @@ class aresta {
   }
 }
 
+class face {
+  constructor(aresta1, aresta2, aresta3, aresta4) {
+    this.aresta1 = aresta1;
+    this.aresta2 = aresta2;
+    this.aresta3 = aresta3;
+    this.aresta4 = aresta4;
+    this.visible = false;
+  }
+}
+
 class wingedEdge {
   constructor(verticesList, arestasList, facesList, initialFace, lastFace) {
     this.verticesList = verticesList;
@@ -822,7 +842,7 @@ function lookForClosestPoint(clickedPoint, context) {
           console.log('Distance is: ' + getDistance(clickedPoint, Scene.objects[i].verticesList[j][k], context));
           console.log('current selected object is: ' + closestObjectIndex);
         if(getDistance(clickedPoint, Scene.objects[i].verticesList[j][k], context) < closestObjectDistance &&
-        getDistance(clickedPoint, Scene.objects[i].verticesList[j][k], context) < TOLERANCE_ERROR) {
+        getDistance(clickedPoint, Scene.objects[i].verticesList[j][k], context) < TOLERANCE_MARGIN) {
           closestObjectIndex = i;
           console.log('selected object change: ' + closestObjectIndex);
           closestObjectDistance = getDistance(clickedPoint, Scene.objects[i].verticesList[j][k], context);
@@ -946,7 +966,7 @@ function revolutionY() {
   console.log('Rotation in y');
   //definig how many points to be calculated
   let pointsToBeCalculated = numberSections;
-  if (rotationAngle === 360)
+  if (rotationAngle === '360')
     pointsToBeCalculated--;
 
   //defining angle between each point
@@ -973,6 +993,8 @@ function calculatePointsRotationY(pointsToBeCalculated, angleBetweenPoints) {
 
 
   defineArestas(object3d);
+  
+  defineFaces(object3d);
   
   //debugger;
   Scene.objects.push(new wingedEdge(object3d.verticesList, object3d.arestasList, 
@@ -1041,40 +1063,63 @@ function calculateZ(calculationMatrix, lastPoint) {
 function defineArestas(object3d) {
   const rows = object3d.verticesList.length;
   const columns = object3d.verticesList[0].length;
+  let count = 0;
+  
 
   //define arestas horizontais
   for (let i = 0; i < rows; i++) {
     for (let j = 0; j < columns; j++) {
       let tempAresta = new aresta(object3d.verticesList[i][j], object3d.verticesList[i][(j + 1) % columns]);
       object3d.arestasList.push(tempAresta);
-      //inserir aresta horizontal na lista de faces exceto as ultimas
-      if(! (i === rows -1 && object3d.lastFace === true) ) {
-        object3d.facesList.push(tempAresta);
-      }
-    
-      if((i===0 && j === 0) && object3d.initialFace === true)
-        object3d.facesList.push(tempAresta);
-
-      if((i === rows-1 && j === 0) && object3d.lastFace === true)
-        object3d.facesList.push(tempAresta);
+      count++;
     }
   }
+  console.log('number of horizontal arestas: ' + count);
+  count = 0;
 
   //define arestas verticais
   for (let i = 0; i < rows - 1; i++) {
     for (let j = 0; j < columns; j++) {
       let tempAresta = new aresta(object3d.verticesList[i][j], object3d.verticesList[i + 1][j]);
       object3d.arestasList.push(tempAresta);
+      count++;
     }
   }
+  console.log('number of vertical arestas: ' + count);
+}
 
+function defineFaces(object3d) {
+  const rows = object3d.verticesList.length;
+  const columns = object3d.verticesList[0].length;
+  const numHorizontalArestasPerOriginalVertice = parseInt(numberSections);
+  console.log('number of horizontal arestas per vertice calculated: ' + numHorizontalArestasPerOriginalVertice);
+  
+
+  let totalNumberOfHorizontalArestas = (numHorizontalArestasPerOriginalVertice * initial3dVertices.length);
+  console.log('number of total horizontal arestas calculated: ' + totalNumberOfHorizontalArestas);
+  
+  
+  for(let i = 0; i < (totalNumberOfHorizontalArestas - numHorizontalArestasPerOriginalVertice); i++) {
+    let aresta1 = object3d.arestasList[i];
+    let aresta2 = object3d.arestasList[(totalNumberOfHorizontalArestas) + i];
+    let aresta3 = object3d.arestasList[i + numHorizontalArestasPerOriginalVertice];
+    let aresta4;
+    //estabelecendo a aresta vertical esquerda da face
+    if((i %  numHorizontalArestasPerOriginalVertice) === 0){
+      aresta4 = object3d.arestasList[totalNumberOfHorizontalArestas + i + (numHorizontalArestasPerOriginalVertice -1) ];
+    }else{
+      aresta4 = object3d.arestasList[totalNumberOfHorizontalArestas + i -1];
+    }
+    object3d.facesList.push(new face(aresta1, aresta2, aresta3, aresta4));
+  }
+  
 }
 
 function revolutionX() {
   console.log('Rotation in x');
   //definig how many points to be calculated
   let pointsToBeCalculated = numberSections;
-  if (rotationAngle === 360)
+  if (rotationAngle === '360')
     pointsToBeCalculated--;
 
   //defining angle between each point
@@ -1100,6 +1145,7 @@ function calculatePointsRotationX(pointsToBeCalculated, angleBetweenPoints) {
   }
 
   defineArestas(object3d);
+  defineFaces(object3d);
   Scene.objects.push(new wingedEdge(object3d.verticesList, object3d.arestasList, 
     object3d.facesList, object3d.initialFace, object3d.lastFace));
 }
@@ -1163,6 +1209,7 @@ function calculatePointsRotationZ(pointsToBeCalculated, angleBetweenPoints) {
   }
 
   defineArestas(object3d);
+  defineFaces(object3d);
   Scene.objects.push(new wingedEdge(object3d.verticesList, object3d.arestasList, 
     object3d.facesList, object3d.initialFace, object3d.lastFace));
 }
@@ -1213,8 +1260,44 @@ function drawFrontVista() {
     frontContext.stroke();
   } else {
     //draw only the visible faces from the front
+    drawFrontWithOcultation();
   }
   
+}
+
+function drawFrontWithOcultation(){
+  debugger;
+  defineWhichFacesAreVisible(Camera.front);
+  frontContext.beginPath();
+  //Camera.side;
+  for (let i = 0; i < Scene.objects.length; i++) {
+    for (let j = 0; j < Scene.objects[i].facesList.length; j++) {
+      if(Scene.objects[i].facesList[j].visible){
+        //aresta1
+        frontContext.moveTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta1.point1.coordX),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta1.point1.coordY));
+        frontContext.lineTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta1.point2.coordX),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta1.point2.coordY));
+        //aresta2
+        frontContext.moveTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta2.point1.coordX),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta2.point1.coordY));
+        frontContext.lineTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta2.point2.coordX),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta2.point2.coordY));
+        //aresta3
+        frontContext.moveTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta3.point1.coordX),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta3.point1.coordY));
+        frontContext.lineTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta3.point2.coordX),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta3.point2.coordY));
+        //aresta4
+        frontContext.moveTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta4.point1.coordX),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta4.point1.coordY));
+        frontContext.lineTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta4.point2.coordX),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta4.point2.coordY));
+      }
+    }
+  }
+
+  frontContext.stroke();
 }
 
 function drawSideVista() {
@@ -1234,8 +1317,112 @@ function drawSideVista() {
     sideContext.stroke();
   } else {
     //draw only the visible faces from the side
+    drawSideWithOcultation();
   }
   
+}
+
+function drawSideWithOcultation(){
+  defineWhichFacesAreVisible(Camera.side);
+  sideContext.beginPath();
+  //Camera.side;
+  for (let i = 0; i < Scene.objects.length; i++) {
+    for (let j = 0; j < Scene.objects[i].facesList.length; j++) {
+      if(Scene.objects[i].facesList[j].visible){
+        //aresta1
+        sideContext.moveTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta1.point1.coordZ),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta1.point1.coordY));
+        sideContext.lineTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta1.point2.coordZ),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta1.point2.coordY));
+        //aresta2
+        sideContext.moveTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta2.point1.coordZ),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta2.point1.coordY));
+        sideContext.lineTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta2.point2.coordZ),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta2.point2.coordY));
+        //aresta3
+        sideContext.moveTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta3.point1.coordZ),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta3.point1.coordY));
+        sideContext.lineTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta3.point2.coordZ),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta3.point2.coordY));
+        //aresta4
+        sideContext.moveTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta4.point1.coordZ),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta4.point1.coordY));
+        sideContext.lineTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta4.point2.coordZ),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta4.point2.coordY));
+      }
+    }
+  }
+
+  sideContext.stroke();
+}
+
+function defineWhichFacesAreVisible(cameraPosition) {
+  
+  let vetorNormalFace = [];
+  let normaVetor; 
+  let vetor1 = [];
+  let vetor2 = [];
+  let normal = [];
+  let p;
+  if(cameraPosition === Camera.front){
+    p = [0, 0, cameraPosition.coordZ * -1];
+  }else if(cameraPosition === Camera.side){
+    p = [cameraPosition.coordX * -1, 0, 0];
+  }else if(cameraPosition === Camera.above){
+    p = [0, cameraPosition.coordY * -1, 0];
+  }
+
+  for(let i = 0; i < Scene.objects.length; i++) {
+    for(let j = 0; j < Scene.objects[i].facesList.length; j++) {
+      vetor1.push(Scene.objects[i].facesList[j].aresta1.point1.coordX - Scene.objects[i].facesList[j].aresta1.point2.coordX);
+      vetor1.push(Scene.objects[i].facesList[j].aresta1.point1.coordY - Scene.objects[i].facesList[j].aresta1.point2.coordY);
+      vetor1.push(Scene.objects[i].facesList[j].aresta1.point1.coordZ - Scene.objects[i].facesList[j].aresta1.point2.coordZ);
+
+      vetor2.push(Scene.objects[i].facesList[j].aresta2.point2.coordX - Scene.objects[i].facesList[j].aresta2.point1.coordX);
+      vetor2.push(Scene.objects[i].facesList[j].aresta2.point2.coordY - Scene.objects[i].facesList[j].aresta2.point1.coordY);
+      vetor2.push(Scene.objects[i].facesList[j].aresta2.point2.coordZ - Scene.objects[i].facesList[j].aresta2.point1.coordZ);
+
+      vetorNormalFace = calculateVetorNormal(vetor1, vetor2);
+
+      normaVetor = Math.sqrt(Math.pow(vetorNormalFace[0], 2) + Math.pow(vetorNormalFace[1], 2), Math.pow(vetorNormalFace[2], 2));
+      
+      //vetor unitario normalizado
+      vetorNormalFace[0] = vetorNormalFace[0] / normaVetor;
+      vetorNormalFace[1] = vetorNormalFace[1] / normaVetor;
+      vetorNormalFace[2] = vetorNormalFace[2] / normaVetor;
+
+      normal[0] = cameraPosition.coordX - p[0];
+      normal[1] = cameraPosition.coordY - p[1];
+      normal[2] = cameraPosition.coordZ - p[2];
+      
+      normaVetor = Math.sqrt(Math.pow(normal[0], 2) + Math.pow(normal[1], 2) + Math.pow(normal[2], 2));
+
+      //vetor unitario normalizado
+      normal[0] = normal[0] / normaVetor;
+      normal[1] = normal[1] / normaVetor;
+      normal[2] = normal[2] / normaVetor;
+
+      if(((normal[0] * vetorNormalFace[0]) + (normal[1] * vetorNormalFace[1]) + (normal[2] * vetorNormalFace[2])) > 0){
+        Scene.objects[i].facesList[j].visible = true;
+      }else{
+        Scene.objects[i].facesList[j].visible = false;
+      }
+
+      vetor1 = [];
+      vetor2 = [];
+      vetorNormalFace = [];
+    }
+  }
+}
+
+function calculateVetorNormal(vetor1, vetor2) {
+  let vetorResultado = [];
+
+  vetorResultado.push( (vetor1[1] * vetor2[2]) - (vetor2[1] * vetor1[2]) );
+  vetorResultado.push( (vetor1[2] * vetor2[0]) - (vetor2[2] * vetor1[0]) );
+  vetorResultado.push( (vetor1[0] * vetor2[1]) - (vetor2[0] * vetor1[1]) );
+
+  return vetorResultado;
 }
 
 function drawAboveVista() {
@@ -1255,8 +1442,43 @@ function drawAboveVista() {
     aboveContext.stroke();
   } else {
     //draw only the visible faces from above
+    drawAboveWithOcultation();
   }
   
+}
+
+function drawAboveWithOcultation(){
+  defineWhichFacesAreVisible(Camera.above);
+  aboveContext.beginPath();
+  
+  for (let i = 0; i < Scene.objects.length; i++) {
+    for (let j = 0; j < Scene.objects[i].facesList.length; j++) {
+      if(Scene.objects[i].facesList[j].visible){
+        //aresta1
+        aboveContext.moveTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta1.point1.coordX),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta1.point1.coordZ));
+        aboveContext.lineTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta1.point2.coordX),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta1.point2.coordZ));
+        //aresta2
+        aboveContext.moveTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta2.point1.coordX),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta2.point1.coordZ));
+        aboveContext.lineTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta2.point2.coordX),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta2.point2.coordZ));
+        //aresta3
+        aboveContext.moveTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta3.point1.coordX),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta3.point1.coordZ));
+        aboveContext.lineTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta3.point2.coordX),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta3.point2.coordZ));
+        //aresta4
+        aboveContext.moveTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta4.point1.coordX),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta4.point1.coordZ));
+        aboveContext.lineTo(convertXtoCanvas(Scene.objects[i].facesList[j].aresta4.point2.coordX),
+        convertYtoCanvas(Scene.objects[i].facesList[j].aresta4.point2.coordZ));
+      }
+    }
+  }
+
+  aboveContext.stroke();
 }
 
 function executeTranslation(coordX, coordY, coordZ, objectIndex) {
@@ -1422,7 +1644,7 @@ let Scene = {
 const Camera = {
   front: new point3d(0, 0, 350),
   side: new point3d(350, 0, 0),
-  above: new point3d(0, 350, 0)
+  above: new point3d(0, -350, 0)
 }
 
 //beginning execution when the page loads
@@ -1439,7 +1661,7 @@ let originalObjects = {
 
 
 
-
+//TODO : define faces the correct way
 
 
 
