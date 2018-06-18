@@ -81,7 +81,10 @@ saveSceneButton.addEventListener('click', function(e) {
   let sceneJSON = JSON.stringify(Scene);
   let fileName = prompt("Please enter the filename.");
   //console.log('This is the saved data: ' + sceneJSON);
-  saveText(sceneJSON, fileName+".json");
+  setTimeout(function(){
+    saveText(sceneJSON, fileName+".json");
+  }, 1000);
+  
 });
 
 newSceneButton.addEventListener('click', function() {
@@ -103,7 +106,10 @@ function saveText(text, filename){
   var a = document.createElement('a');
   a.setAttribute('href', 'data:text/plain;charset=utf-u,'+encodeURIComponent(text));
   a.setAttribute('download', filename);
-  a.click()
+  setTimeout(function(){
+    a.click();
+  }, 1000);
+  
 }
 
 noOcultationButton.addEventListener('click', function() {
@@ -204,7 +210,7 @@ frontCanvas.addEventListener('mouseout', function() {
 
 let lastX;
 let lastY;
-frontCanvas.addEventListener('mousedown', function() {
+frontCanvas.addEventListener('mousedown', function(event) {
   event.preventDefault();
   event.stopPropagation();
   let clickedPoint = getCoord(event, frontContext);
@@ -226,7 +232,7 @@ frontCanvas.addEventListener('mousedown', function() {
   }
 });
 
-frontCanvas.addEventListener('mousemove', function() {
+frontCanvas.addEventListener('mousemove', function(event) {
   event.preventDefault();
   event.stopPropagation();
   if(!isDown) {
@@ -338,7 +344,7 @@ frontCanvas.addEventListener('mousemove', function() {
   drawAboveVista();
 });
 
-frontCanvas.addEventListener('mouseup', function() {
+frontCanvas.addEventListener('mouseup', function(event) {
   event.preventDefault();
   event.stopPropagation();
   isDown = false;
@@ -355,7 +361,7 @@ function initSideCanvas() {
   sideContext.lineWidth = 1;
 }
 
-sideCanvas.addEventListener('mousedown', function() {
+sideCanvas.addEventListener('mousedown', function(event) {
   event.preventDefault();
   event.stopPropagation();
   let clickedPoint = getCoord(event, sideContext);
@@ -377,7 +383,7 @@ sideCanvas.addEventListener('mousedown', function() {
   }
 });
 
-sideCanvas.addEventListener('mousemove', function() {
+sideCanvas.addEventListener('mousemove', function(event) {
   event.preventDefault();
   event.stopPropagation();
   if(!isDown) {
@@ -497,7 +503,7 @@ sideCanvas.addEventListener('mousemove', function() {
   drawAboveVista();
 });
 
-sideCanvas.addEventListener('mouseup', function() {
+sideCanvas.addEventListener('mouseup', function(event) {
   event.preventDefault();
   event.stopPropagation();
   isDown = false;
@@ -507,7 +513,7 @@ sideCanvas.addEventListener('mouseout', function() {
   if(drawingOnSideCanvas) {
     objectDetails.classList.remove('hide');
   }
-})
+});
 
 
 let drawingOnAboveCanvas = false;
@@ -521,7 +527,7 @@ function initAboveCanvas() {
   aboveContext.lineWidth = 1;
 }
 
-aboveCanvas.addEventListener('mousedown', function() {
+aboveCanvas.addEventListener('mousedown', function(event) {
   event.preventDefault();
   event.stopPropagation();
   let clickedPoint = getCoord(event, aboveContext);
@@ -543,7 +549,7 @@ aboveCanvas.addEventListener('mousedown', function() {
   }
 });
 
-aboveCanvas.addEventListener('mousemove', function() {
+aboveCanvas.addEventListener('mousemove', function(event) {
   event.preventDefault();
   event.stopPropagation();
   if(!isDown) {
@@ -653,7 +659,7 @@ aboveCanvas.addEventListener('mousemove', function() {
   drawAboveVista();
 });
 
-aboveCanvas.addEventListener('mouseup', function() {
+aboveCanvas.addEventListener('mouseup', function(event) {
   event.preventDefault();
   event.stopPropagation();
   isDown = false;
@@ -938,11 +944,11 @@ function convertYtoCanvas(value) {
 }
 
 function convertFromCanvasX(value) {
-  return value - aboveCanvas.width / 2;
+  return (value - aboveCanvas.width / 2);
 }
 
 function convertFromCanvasY(value) {
-  return (value - aboveCanvas.height / 2) * (-1);
+  return ((value - aboveCanvas.height / 2) * (-1));
 }
 
 function degreeToRadian(degrees){
@@ -1266,7 +1272,7 @@ function drawFrontVista() {
 }
 
 function drawFrontWithOcultation(){
-  debugger;
+  //debugger;
   defineWhichFacesAreVisible(Camera.front);
   frontContext.beginPath();
   //Camera.side;
