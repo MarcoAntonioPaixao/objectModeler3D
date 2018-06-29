@@ -1664,10 +1664,3 @@ let originalObjects = {
 }
 
 
-
-
-
-//TODO : define faces the correct way
-
-
-
