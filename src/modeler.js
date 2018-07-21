@@ -1,5 +1,6 @@
 //selecting elements
 const objectDetails = document.getElementById('objectDetails');
+const drawButton = document.getElementById('draw');
 const selectButton = document.getElementById('select');
 const rotateHorizontalButton = document.getElementById('rotateHorizontal');
 const rotateVerticalButton = document.getElementById('rotateVertical');
@@ -18,7 +19,7 @@ const rotationAngleField = document.getElementById('revolutionRotationAngle');
 const rotationAxisField = document.getElementById('revolutionRotationAxis');
 const numberSectionsField = document.getElementById('numberSections');
 
-const TOLERANCE_MARGIN = 10;
+const TOLERANCE_MARGIN = 100;
 
 
 //initialize all canvas
@@ -56,8 +57,6 @@ loadSceneButton.addEventListener('click', function(e) {
 
 }, false);
 
-
-
 function handleFiles(files) {
   
   let file = files[0];
@@ -81,7 +80,10 @@ saveSceneButton.addEventListener('click', function(e) {
   let sceneJSON = JSON.stringify(Scene);
   let fileName = prompt("Please enter the filename.");
   //console.log('This is the saved data: ' + sceneJSON);
-  saveText(sceneJSON, fileName+".json");
+  setTimeout(function(){
+    saveText(sceneJSON, fileName+".json");
+  }, 1000);
+  
 });
 
 newSceneButton.addEventListener('click', function() {
@@ -103,7 +105,10 @@ function saveText(text, filename){
   var a = document.createElement('a');
   a.setAttribute('href', 'data:text/plain;charset=utf-u,'+encodeURIComponent(text));
   a.setAttribute('download', filename);
-  a.click()
+  setTimeout(function(){
+    a.click();
+  }, 1000);
+  
 }
 
 noOcultationButton.addEventListener('click', function() {
@@ -132,16 +137,40 @@ withOcultationButton.addEventListener('click', function() {
   drawSideVista();
 });
 
+drawButton.addEventListener('click', function() {
+  modeDraw = true;
+  modeSelect = false;
+  modeScale = false;
+  modeRotationVertical = false;
+  modeRotationHorizontal = false;
+
+  drawButton.classList.add('selected')
+  selectButton.classList.remove('selected');
+  scaleButton.classList.remove('selected');
+  rotateHorizontalButton.classList.remove('selected');
+  rotateVerticalButton.classList.remove('selected');
+
+  drawButton.classList.remove('shadow');
+  selectButton.classList.add('shadow');
+  scaleButton.classList.add('shadow');
+  rotateHorizontalButton.classList.add('shadow');
+  rotateVerticalButton.classList.add('shadow');
+});
+
 selectButton.addEventListener('click', function() {
+  modeDraw = false;
   modeSelect = true;
   modeScale = false;
   modeRotationVertical = false;
   modeRotationHorizontal = false;
+
+  drawButton.classList.remove('selected');
   selectButton.classList.add('selected');
   scaleButton.classList.remove('selected');
   rotateHorizontalButton.classList.remove('selected');
   rotateVerticalButton.classList.remove('selected');
 
+  drawButton.classList.add('shadow');
   selectButton.classList.remove('shadow');
   scaleButton.classList.add('shadow');
   rotateHorizontalButton.classList.add('shadow');
@@ -149,15 +178,19 @@ selectButton.addEventListener('click', function() {
 });
 
 scaleButton.addEventListener('click', function() {
+  modeDraw = false;
   modeSelect = false;
   modeScale = true;
   modeRotationVertical = false;
   modeRotationHorizontal = false;
+
+  drawButton.classList.remove('selected');
   selectButton.classList.remove('selected');
   scaleButton.classList.add('selected');
   rotateHorizontalButton.classList.remove('selected');
   rotateVerticalButton.classList.remove('selected');
 
+  drawButton.classList.add('shadow');
   selectButton.classList.add('shadow');
   scaleButton.classList.remove('shadow');
   rotateHorizontalButton.classList.add('shadow');
@@ -165,15 +198,19 @@ scaleButton.addEventListener('click', function() {
 });
 
 rotateHorizontalButton.addEventListener('click', function() {
+  modeDraw = false;
   modeSelect = false;
   modeScale = false;
   modeRotationVertical = false;
   modeRotationHorizontal = true;
+
+  drawButton.classList.remove('selected');
   selectButton.classList.remove('selected');
   scaleButton.classList.remove('selected');
   rotateHorizontalButton.classList.add('selected');
   rotateVerticalButton.classList.remove('selected');
 
+  drawButton.classList.add('shadow');
   selectButton.classList.add('shadow');
   scaleButton.classList.add('shadow');
   rotateHorizontalButton.classList.remove('shadow');
@@ -181,15 +218,19 @@ rotateHorizontalButton.addEventListener('click', function() {
 });
 
 rotateVerticalButton.addEventListener('click', function() {
+  modeDraw = false;
   modeSelect = false;
   modeScale = false;
   modeRotationVertical = true;
   modeRotationHorizontal = false;
+
+  drawButton.classList.remove('selected');
   selectButton.classList.remove('selected');
   scaleButton.classList.remove('selected');
   rotateHorizontalButton.classList.remove('selected');
   rotateVerticalButton.classList.add('selected');
 
+  drawButton.classList.add('shadow');
   selectButton.classList.add('shadow');
   scaleButton.classList.add('shadow');
   rotateHorizontalButton.classList.add('shadow');
@@ -204,7 +245,7 @@ frontCanvas.addEventListener('mouseout', function() {
 
 let lastX;
 let lastY;
-frontCanvas.addEventListener('mousedown', function() {
+frontCanvas.addEventListener('mousedown', function(event) {
   event.preventDefault();
   event.stopPropagation();
   let clickedPoint = getCoord(event, frontContext);
@@ -212,13 +253,13 @@ frontCanvas.addEventListener('mousedown', function() {
   console.log('clicked point Y: ' + clickedPoint.coordY);
   lastX = convertFromCanvasX(clickedPoint.coordX);
   lastY = convertFromCanvasY(clickedPoint.coordY);
-  //if on select mode
-  selectedObject = 10000; 
-  selectedObject = lookForClosestPoint(clickedPoint, frontContext);
-  if(selectedObject < 10000) {
-    isDown = true;
-  } else {
-    //if did not click on an existing object
+
+  if(modeSelect || modeScale || modeRotationHorizontal || modeRotationVertical){
+    selectedObject = 10000; 
+    selectedObject = lookForClosestPoint(clickedPoint, frontContext);
+    if(selectedObject < 10000)
+      isDown = true;
+  } else if(modeDraw) {
     drawingOnFrontCanvas = true;
     drawingOnSideCanvas = false;
     drawingOnAboveCanvas = false;
@@ -226,7 +267,7 @@ frontCanvas.addEventListener('mousedown', function() {
   }
 });
 
-frontCanvas.addEventListener('mousemove', function() {
+frontCanvas.addEventListener('mousemove', function(event) {
   event.preventDefault();
   event.stopPropagation();
   if(!isDown) {
@@ -338,7 +379,7 @@ frontCanvas.addEventListener('mousemove', function() {
   drawAboveVista();
 });
 
-frontCanvas.addEventListener('mouseup', function() {
+frontCanvas.addEventListener('mouseup', function(event) {
   event.preventDefault();
   event.stopPropagation();
   isDown = false;
@@ -355,7 +396,7 @@ function initSideCanvas() {
   sideContext.lineWidth = 1;
 }
 
-sideCanvas.addEventListener('mousedown', function() {
+sideCanvas.addEventListener('mousedown', function(event) {
   event.preventDefault();
   event.stopPropagation();
   let clickedPoint = getCoord(event, sideContext);
@@ -363,13 +404,13 @@ sideCanvas.addEventListener('mousedown', function() {
   console.log('clicked point Y: ' + clickedPoint.coordY);
   lastX = convertFromCanvasX(clickedPoint.coordX);
   lastY = convertFromCanvasY(clickedPoint.coordY);
-  //if on select mode
-  selectedObject = 10000; 
-  selectedObject = lookForClosestPoint(clickedPoint, sideContext);
-  if(selectedObject < 10000) {
-    isDown = true;
-  } else {
-    //if did not click on an existing object
+
+  if(modeSelect || modeScale || modeRotationHorizontal || modeRotationVertical){
+    selectedObject = 10000; 
+    selectedObject = lookForClosestPoint(clickedPoint, sideContext);
+    if(selectedObject < 10000)
+      isDown = true;
+  } else if(modeDraw){
     drawingOnFrontCanvas = false;
     drawingOnSideCanvas = true;
     drawingOnAboveCanvas = false;
@@ -377,7 +418,7 @@ sideCanvas.addEventListener('mousedown', function() {
   }
 });
 
-sideCanvas.addEventListener('mousemove', function() {
+sideCanvas.addEventListener('mousemove', function(event) {
   event.preventDefault();
   event.stopPropagation();
   if(!isDown) {
@@ -497,7 +538,7 @@ sideCanvas.addEventListener('mousemove', function() {
   drawAboveVista();
 });
 
-sideCanvas.addEventListener('mouseup', function() {
+sideCanvas.addEventListener('mouseup', function(event) {
   event.preventDefault();
   event.stopPropagation();
   isDown = false;
@@ -507,7 +548,7 @@ sideCanvas.addEventListener('mouseout', function() {
   if(drawingOnSideCanvas) {
     objectDetails.classList.remove('hide');
   }
-})
+});
 
 
 let drawingOnAboveCanvas = false;
@@ -521,7 +562,7 @@ function initAboveCanvas() {
   aboveContext.lineWidth = 1;
 }
 
-aboveCanvas.addEventListener('mousedown', function() {
+aboveCanvas.addEventListener('mousedown', function(event) {
   event.preventDefault();
   event.stopPropagation();
   let clickedPoint = getCoord(event, aboveContext);
@@ -529,13 +570,14 @@ aboveCanvas.addEventListener('mousedown', function() {
   console.log('clicked point Y: ' + clickedPoint.coordY);//this is z actually
   lastX = convertFromCanvasX(clickedPoint.coordX);
   lastY = convertFromCanvasY(clickedPoint.coordY);
-  //if on select mode
-  selectedObject = 10000; 
-  selectedObject = lookForClosestPoint(clickedPoint, aboveContext);
-  if(selectedObject < 10000) {
-    isDown = true;
-  } else {
-    //if did not click on an existing object
+  
+  if(modeSelect || modeScale || modeRotationHorizontal || modeRotationVertical){
+    selectedObject = 10000; 
+    selectedObject = lookForClosestPoint(clickedPoint, aboveContext);
+    if(selectedObject < 10000) {
+      isDown = true;
+    }
+  } else if(modeDraw) {
     drawingOnFrontCanvas = false;
     drawingOnSideCanvas = false;
     drawingOnAboveCanvas = true;
@@ -543,7 +585,7 @@ aboveCanvas.addEventListener('mousedown', function() {
   }
 });
 
-aboveCanvas.addEventListener('mousemove', function() {
+aboveCanvas.addEventListener('mousemove', function(event) {
   event.preventDefault();
   event.stopPropagation();
   if(!isDown) {
@@ -653,7 +695,7 @@ aboveCanvas.addEventListener('mousemove', function() {
   drawAboveVista();
 });
 
-aboveCanvas.addEventListener('mouseup', function() {
+aboveCanvas.addEventListener('mouseup', function(event) {
   event.preventDefault();
   event.stopPropagation();
   isDown = false;
@@ -938,11 +980,11 @@ function convertYtoCanvas(value) {
 }
 
 function convertFromCanvasX(value) {
-  return value - aboveCanvas.width / 2;
+  return (value - aboveCanvas.width / 2);
 }
 
 function convertFromCanvasY(value) {
-  return (value - aboveCanvas.height / 2) * (-1);
+  return ((value - aboveCanvas.height / 2) * (-1));
 }
 
 function degreeToRadian(degrees){
@@ -1266,7 +1308,7 @@ function drawFrontVista() {
 }
 
 function drawFrontWithOcultation(){
-  debugger;
+  //debugger;
   defineWhichFacesAreVisible(Camera.front);
   frontContext.beginPath();
   //Camera.side;
@@ -1614,9 +1656,11 @@ function executeRotationX(angle, objectIndex) {
 
 
 //initializing variables
-let modeSelect = true;
+let modeSelect = false;
+let modeDraw = true;
 let modeScale = false;
-let modeRotation = false;
+let modeRotationHorizontal = false;
+let modeRotationVertical = false;
 let pointArray = [];
 let rotationAxis = 0;
 let numberSections = 0;
@@ -1656,12 +1700,6 @@ initProfileCanvas();
 let originalObjects = {
   objects: []
 }
-
-
-
-
-
-//TODO : define faces the correct way
 
 
 
