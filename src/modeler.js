@@ -65,7 +65,26 @@ function handleFiles(files) {
 
   fileReader.onload = function(event) {
     console.log('this is the read string from the json file: ' + event.target.result);
-    Scene = JSON.parse(fileReader.result);
+    let fakeScene = JSON.parse(fileReader.result);
+
+    Scene = {
+      objects: []
+    };
+
+    for(let i = 0; i < fakeScene.objects.length; i++){
+      object3d.verticesList = fakeScene.objects[i].verticesList;
+    
+      object3d.initialFace = fakeScene.objects[i].initialFace;
+      
+      object3d.lastFace = fakeScene.objects[i].lastFace;
+    
+      defineArestas(object3d);
+      
+      defineFaces(object3d);
+      
+      Scene.objects.push(new wingedEdge(object3d.verticesList, object3d.arestasList, 
+        object3d.facesList, object3d.initialFace, object3d.lastFace));
+    }
     cleanAllCanvas();
     initFrontCanvas();
     initSideCanvas();
@@ -79,7 +98,6 @@ function handleFiles(files) {
 saveSceneButton.addEventListener('click', function(e) {
   let sceneJSON = JSON.stringify(Scene);
   let fileName = prompt("Please enter the filename.");
-  //console.log('This is the saved data: ' + sceneJSON);
   setTimeout(function(){
     saveText(sceneJSON, fileName+".json");
   }, 1000);
@@ -257,8 +275,11 @@ frontCanvas.addEventListener('mousedown', function(event) {
   if(modeSelect || modeScale || modeRotationHorizontal || modeRotationVertical){
     selectedObject = 10000; 
     selectedObject = lookForClosestPoint(clickedPoint, frontContext);
-    if(selectedObject < 10000)
+    console.log('after returning selected object is: ' + selectedObject);
+    if(selectedObject < 10000) {
+      console.log('setting isDown to true!');
       isDown = true;
+    }
   } else if(modeDraw) {
     drawingOnFrontCanvas = true;
     drawingOnSideCanvas = false;
@@ -371,6 +392,8 @@ frontCanvas.addEventListener('mousemove', function(event) {
 
   lastX = currentX;
   lastY = currentY;
+
+  console.log("I'm drawing!!!");
 
   //redraw everything
   cleanAllCanvas();
@@ -688,6 +711,8 @@ aboveCanvas.addEventListener('mousemove', function(event) {
   lastX = currentX;
   lastY = currentY;
 
+  console("I'm now drawing the object!!!");
+
   //redraw everything
   cleanAllCanvas();
   drawFrontVista();
@@ -733,7 +758,8 @@ generateObjectButton.addEventListener('click', function() {
   drawSideVista();
   drawAboveVista();
   //saving original objects coordinates for saving
-  originalObjects.objects.push(new wingedEdge(object3d.verticesList, object3d.arestasList));
+  originalObjects.objects.push(new wingedEdge(object3d.verticesList, object3d.arestasList, 
+    object3d.facesList, object3d.initialFace, object3d.lastFace));
   objectDetails.classList.add('hide');
   drawingOnAboveCanvas = false;
   drawingOnFrontCanvas = false;
@@ -858,7 +884,7 @@ function getCoord(event, context) {
   let clickedPoint = new point2d();
   clickedPoint.coordX = event.offsetX;// - beginnerCanvas.width/2;
   clickedPoint.coordY = event.offsetY;// - beginnerCanvas.height/2) * (-1);
-  console.log("x coords: " + clickedPoint.coordX + ", y coords: " + clickedPoint.coordY);
+  //console.log("x coords: " + clickedPoint.coordX + ", y coords: " + clickedPoint.coordY);
   //storePoint(clickedPoint, context);
   return clickedPoint;
 }
@@ -866,7 +892,7 @@ function getCoord(event, context) {
 function storePoint(point, context) {
   pointArray.push(point);
   if(pointArray.length === 2){
-    console.log('reached this point');
+    console.log('reached store this point');
     context.beginPath();
     drawLine(pointArray, context);
   }else if(pointArray.length > 2) {
@@ -893,7 +919,7 @@ function lookForClosestPoint(clickedPoint, context) {
       }
     }
   }
-  //console.log('selected object: ' + closestObjectIndex);
+  console.log('RETURNING: ' + closestObjectIndex);
   return closestObjectIndex;
 }
 
@@ -934,11 +960,11 @@ function setObjectData() {
   let y = 0;
 
   for (let i = 0; i < numVertices; i++) {
-    console.log("Before Conversion: x coords: " + pointArray[i].coordX + ", y coords: " + pointArray[i].coordY);
+    //console.log("Before Conversion: x coords: " + pointArray[i].coordX + ", y coords: " + pointArray[i].coordY);
     x = convertFromCanvasX(pointArray[i].coordX);
     y = convertFromCanvasY(pointArray[i].coordY);
-    console.log("After Conversion: x coords: " + x + ", y coords: " + y);
-    console.log("Converted to Canvas x: " + convertXtoCanvas(x) + " y: " + convertYtoCanvas(y));
+    //console.log("After Conversion: x coords: " + x + ", y coords: " + y);
+    //console.log("Converted to Canvas x: " + convertXtoCanvas(x) + " y: " + convertYtoCanvas(y));
     let tempPoint = new point();
     tempPoint.coordX = x;
     tempPoint.coordY = y;
@@ -1005,7 +1031,6 @@ function detectRotationAxis() {
 }
 
 function revolutionY() {
-  console.log('Rotation in y');
   //definig how many points to be calculated
   let pointsToBeCalculated = numberSections;
   if (rotationAngle === '360')
@@ -1051,7 +1076,6 @@ function derivePointsY(pointsToBeCalculated, angleBetweenPoints, initial3dVertic
   [0, 1, 0, 0],
   [-Math.sin(degreeToRadian(angleBetweenPoints)), 0, Math.cos(degreeToRadian(angleBetweenPoints)), 0],
   [0, 0, 0, 1]];
-  console.log(calculationMatrix);
   const calculationMatrixColumns = 4;
   let derivedVertices = [];
 
@@ -1158,7 +1182,6 @@ function defineFaces(object3d) {
 }
 
 function revolutionX() {
-  console.log('Rotation in x');
   //definig how many points to be calculated
   let pointsToBeCalculated = numberSections;
   if (rotationAngle === '360')
@@ -1200,7 +1223,6 @@ function derivePointsX(pointsToBeCalculated, angleBetweenPoints, initial3dVertic
   [0, Math.cos(degreeToRadian(angleBetweenPoints)), -Math.sin(degreeToRadian(angleBetweenPoints)), 0],
   [0, Math.sin(degreeToRadian(angleBetweenPoints)), Math.cos(degreeToRadian(angleBetweenPoints)), 0],
   [0, 0, 0, 1]];
-  console.log(calculationMatrix);
   const calculationMatrixColumns = 4;
   let derivedVertices = [];
 
@@ -1222,7 +1244,6 @@ function derivePointsX(pointsToBeCalculated, angleBetweenPoints, initial3dVertic
 }
 
 function revolutionZ() {
-  console.log('Rotation in z');
   //definig how many points to be calculated
   let pointsToBeCalculated = numberSections;
   if (rotationAngle === 360)
@@ -1264,7 +1285,6 @@ function derivePointsZ(pointsToBeCalculated, angleBetweenPoints, initial3dVertic
   [Math.sin(degreeToRadian(angleBetweenPoints)), Math.cos(degreeToRadian(angleBetweenPoints)), 0, 0],
   [0, 0, 1, 0],
   [0, 0, 0, 1]];
-  console.log(calculationMatrix);
   const calculationMatrixColumns = 4;
   let derivedVertices = [];
 
@@ -1524,11 +1544,20 @@ function drawAboveWithOcultation(){
 }
 
 function executeTranslation(coordX, coordY, coordZ, objectIndex) {
+  console.log('Inside translation!!!');
+  console.log('coord x: ' + coordX);
+  console.log('coord y: ' + coordY);
+  console.log('coord z: ' + coordZ);
+  console.log('objectIndex: ' + objectIndex);
+
   const calculationMatrix = [
     [1, 0, 0, coordX],
     [0, 1, 0, coordY],
     [0, 0, 1, coordZ],
     [0, 0, 0, 1]];
+
+  
+  console.log('selected object is: ' + Scene.objects[objectIndex]);
 
   let pointsToBeCalculated = Scene.objects[objectIndex].verticesList.length;
   for(let j = 0; j < pointsToBeCalculated; j++) {
@@ -1544,6 +1573,44 @@ function executeTranslation(coordX, coordY, coordZ, objectIndex) {
       Scene.objects[objectIndex].verticesList[j][k].coordZ = z;
     }
   } 
+
+  console.log('Outside of translation!!!');
+}
+
+function executeTranslationAlternative(coordX, coordY, coordZ, objectIndex, event){
+  event.preventDefault();
+  event.stopPropagation();
+  console.log('Inside translationAlternative!!!');
+  console.log('coord x: ' + coordX);
+  console.log('coord y: ' + coordY);
+  console.log('coord z: ' + coordZ);
+  console.log('objectIndex: ' + objectIndex);
+
+  const calculationMatrix = [
+    [1, 0, 0, coordX],
+    [0, 1, 0, coordY],
+    [0, 0, 1, coordZ],
+    [0, 0, 0, 1]];
+
+  
+  console.log('selected object is: ' + Scene.objects[objectIndex]);
+
+  let pointsToBeCalculated = Scene.objects[objectIndex].verticesList.length;
+  for(let j = 0; j < pointsToBeCalculated; j++) {
+    for(let k = 0; k < Scene.objects[objectIndex].verticesList[0].length; k++){
+      //for each object calculate all points
+      let x = calculateX(calculationMatrix, Scene.objects[objectIndex].verticesList[j][k]);
+      let y = calculateY(calculationMatrix, Scene.objects[objectIndex].verticesList[j][k]);
+      let z = calculateZ(calculationMatrix, Scene.objects[objectIndex].verticesList[j][k]);
+
+      //modify point with new coordinates
+      Scene.objects[objectIndex].verticesList[j][k].coordX = x;
+      Scene.objects[objectIndex].verticesList[j][k].coordY = y;
+      Scene.objects[objectIndex].verticesList[j][k].coordZ = z;
+    }
+  } 
+
+  console.log('Outside of translationAlternative!!!');
 }
 
 function executeScale(ratioX, ratioY, ratioZ, objectIndex) {
@@ -1603,7 +1670,6 @@ function executeRotationZ(angle, objectIndex) {
 function executeRotationY(angle, objectIndex) {
   //modiffy diference to equal the true scale in percentage
   //must add the difference to the three axis
- //console.log('rotating on y');
   const calculationMatrix = [
     [Math.cos(degreeToRadian(angle)), 0, Math.sin(degreeToRadian(angle)), 0],
     [0, 1, 0, 0],
@@ -1669,6 +1735,7 @@ let selectedObject;
 let isDown = false;
 let withOcultation = false;
 let noOcultation = true;
+let loadedFromFile = false;
 
 //vertices from the 2d profile converted to 3d
 let initial3dVertices = [];
