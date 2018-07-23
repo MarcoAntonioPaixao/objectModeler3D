@@ -175,7 +175,7 @@ flatShadingButton.addEventListener('click', function(){
   withOcultation = false;
   withOcultationButton.classList.remove('selected');
   withOcultationButton.classList.add('shadow');
-  cleanAllCanvas();
+  //cleanAllCanvas();
   drawAboveVista();
   drawFrontVista();
   drawSideVista();
@@ -855,6 +855,333 @@ class wingedEdge {
 
 }
 
+function returnGreaterX(face){
+  let greaterX = -10000;
+  
+  if(face.aresta1.point1.coordX > greaterX) 
+    greaterX = face.aresta1.point1.coordX;
+
+  if(face.aresta2.point1.coordX > greaterX) 
+    greaterX = face.aresta2.point1.coordX;
+
+  if(face.aresta3.point1.coordX > greaterX) 
+    greaterX = face.aresta3.point1.coordX;
+
+  if(face.aresta4.point1.coordX > greaterX) 
+    greaterX = face.aresta4.point1.coordX;
+
+  if(face.aresta1.point2.coordX > greaterX) 
+    greaterX = face.aresta1.point2.coordX;
+
+  if(face.aresta2.point2.coordX > greaterX) 
+    greaterX = face.aresta2.point2.coordX;
+
+  if(face.aresta3.point2.coordX > greaterX) 
+    greaterX = face.aresta3.point2.coordX;
+
+  if(face.aresta4.point2.coordX > greaterX) 
+    greaterX = face.aresta4.point2.coordX;
+
+  return greaterX;
+}
+
+function returnLesserX(face){
+  let lesserX = 10000;
+
+  if(face.aresta1.point1.coordX < lesserX) 
+    lesserX = face.aresta1.point1.coordX;
+
+  if(face.aresta2.point1.coordX < lesserX) 
+    lesserX = face.aresta2.point1.coordX;
+
+  if(face.aresta3.point1.coordX < lesserX) 
+    lesserX = face.aresta3.point1.coordX;
+
+  if(face.aresta4.point1.coordX < lesserX) 
+    lesserX = face.aresta4.point1.coordX;
+
+  if(face.aresta1.point2.coordX < lesserX) 
+    lesserX = face.aresta1.point2.coordX;
+
+  if(face.aresta2.point2.coordX < lesserX) 
+    lesserX = face.aresta2.point2.coordX;
+
+  if(face.aresta3.point2.coordX < lesserX) 
+    lesserX = face.aresta3.point2.coordX;
+
+  if(face.aresta4.point2.coordX < lesserX) 
+    lesserX = face.aresta4.point2.coordX;
+
+  return lesserX;
+}
+
+function returnGreaterY(face){
+  let greaterY = -10000;
+
+  
+  if(face.aresta1.point1.coordY > greaterY) 
+    greaterY = face.aresta1.point1.coordY;
+
+  if(face.aresta2.point1.coordY > greaterY) 
+    greaterY = face.aresta2.point1.coordY;
+
+  if(face.aresta3.point1.coordY > greaterY) 
+    greaterY = face.aresta3.point1.coordY;
+
+  if(face.aresta4.point1.coordY > greaterY) 
+    greaterY = face.aresta4.point1.coordY;
+
+  if(face.aresta1.point2.coordY > greaterY) 
+    greaterY = face.aresta1.point2.coordY;
+
+  if(face.aresta2.point2.coordY > greaterY) 
+    greaterY = face.aresta2.point2.coordY;
+
+  if(face.aresta3.point2.coordY > greaterY) 
+    greaterY = face.aresta3.point2.coordY;
+
+  if(face.aresta4.point2.coordY > greaterY) 
+    greaterY = face.aresta4.point2.coordY;
+  
+
+  return greaterY;
+}
+
+function returnLesserY(face){
+  let lesserY = 10000;
+
+  if(face.aresta1.point1.coordY < lesserY) 
+    lesserY = face.aresta1.point1.coordY;
+
+  if(face.aresta2.point1.coordY < lesserY) 
+    lesserY = face.aresta2.point1.coordY;
+
+  if(face.aresta3.point1.coordY < lesserY) 
+    lesserY = face.aresta3.point1.coordY;
+
+  if(face.aresta4.point1.coordY < lesserY) 
+    lesserY = face.aresta4.point1.coordY;
+
+  if(face.aresta1.point2.coordY < lesserY) 
+    lesserY = face.aresta1.point2.coordY;
+
+  if(face.aresta2.point2.coordY < lesserY) 
+    lesserY = face.aresta2.point2.coordY;
+
+  if(face.aresta3.point2.coordY < lesserY) 
+    lesserY = face.aresta3.point2.coordY;
+
+  if(face.aresta4.point2.coordY < lesserY) 
+    lesserY = face.aresta4.point2.coordY;
+
+  return lesserY;
+}
+
+function returnGreaterZ(face){
+  let greaterZ = -10000;
+
+  if(face.aresta1.point1.coordZ > greaterZ) 
+    greaterZ = face.aresta1.point1.coordZ;
+
+  if(face.aresta2.point1.coordZ > greaterZ) 
+    greaterZ = face.aresta2.point1.coordZ;
+
+  if(face.aresta3.point1.coordZ > greaterZ) 
+    greaterZ = face.aresta3.point1.coordZ;
+
+  if(face.aresta4.point1.coordZ > greaterZ) 
+    greaterZ = face.aresta4.point1.coordZ;
+
+  if(face.aresta1.point2.coordZ > greaterZ) 
+    greaterZ = face.aresta1.point2.coordZ;
+
+  if(face.aresta2.point2.coordZ > greaterZ) 
+    greaterZ = face.aresta2.point2.coordZ;
+
+  if(face.aresta3.point2.coordZ > greaterZ) 
+    greaterZ = face.aresta3.point2.coordZ;
+
+  if(face.aresta4.point2.coordZ > greaterZ) 
+    greaterZ = face.aresta4.point2.coordZ;
+  
+
+  return greaterZ;
+}
+
+function returnLesserZ(face){
+  let lesserZ = 10000;
+
+  if(face.aresta1.point1.coordZ < lesserZ) 
+    lesserZ = face.aresta1.point1.coordZ;
+
+  if(face.aresta2.point1.coordZ < lesserZ) 
+    lesserZ = face.aresta2.point1.coordZ;
+
+  if(face.aresta3.point1.coordZ < lesserZ) 
+    lesserZ = face.aresta3.point1.coordZ;
+
+  if(face.aresta4.point1.coordZ < lesserZ) 
+    lesserZ = face.aresta4.point1.coordZ;
+
+  if(face.aresta1.point2.coordZ < lesserZ) 
+    lesserZ = face.aresta1.point2.coordZ;
+
+  if(face.aresta2.point2.coordZ < lesserZ) 
+    lesserZ = face.aresta2.point2.coordZ;
+
+  if(face.aresta3.point2.coordZ < lesserZ) 
+    lesserZ = face.aresta3.point2.coordZ;
+
+  if(face.aresta4.point2.coordZ < lesserZ) 
+    lesserZ = face.aresta4.point2.coordZ;
+
+  return lesserZ;
+}
+
+function calculateGeometricCenter(face){
+  let greaterX = returnGreaterX(face);
+  let lesserX = returnLesserX(face);
+
+  let greaterY = returnGreaterY(face);
+  let lesserY = returnLesserY(face);
+
+  let greaterZ = returnGreaterZ(face);
+  let lesserZ = returnLesserZ(face);
+
+  return new point3d((lesserX+greaterX)/2, (lesserY+greaterY)/2, (lesserZ+greaterZ)/2);
+}
+
+function returnVetorNormalNormalizado(face){
+  let vetor1 = [];
+  let vetor2 = [];
+  let vetorNormalFace = [];
+  let normaVetor;
+
+  vetor1.push(face.aresta1.point1.coordX - face.aresta1.point2.coordX);
+  vetor1.push(face.aresta1.point1.coordY - face.aresta1.point2.coordY);
+  vetor1.push(face.aresta1.point1.coordZ - face.aresta1.point2.coordZ);
+
+  vetor2.push(face.aresta2.point2.coordX - face.aresta2.point1.coordX);
+  vetor2.push(face.aresta2.point2.coordY - face.aresta2.point1.coordY);
+  vetor2.push(face.aresta2.point2.coordZ - face.aresta2.point1.coordZ);
+
+  vetorNormalFace = calculateVetorNormal(vetor1, vetor2);
+
+  normaVetor = Math.sqrt(Math.pow(vetorNormalFace[0], 2) + Math.pow(vetorNormalFace[1], 2) + Math.pow(vetorNormalFace[2], 2));
+  
+  //vetor unitario normalizado
+  vetorNormalFace[0] = vetorNormalFace[0] / normaVetor;
+  vetorNormalFace[1] = vetorNormalFace[1] / normaVetor;
+  vetorNormalFace[2] = vetorNormalFace[2] / normaVetor;
+
+  return new point3d(vetorNormalFace[0], vetorNormalFace[1], vetorNormalFace[2]);
+}
+
+function calculateIa(){
+  return materialAndIlumination.ila * materialAndIlumination.ka;
+}
+
+function calculateLVector(geometricCenter){
+  let l = [];
+  let normaVetor;
+  l.push(materialAndIlumination.lightPos.coordX - geometricCenter.coordX);
+  l.push(materialAndIlumination.lightPos.coordY - geometricCenter.coordY);
+  l.push(materialAndIlumination.lightPos.coordZ - geometricCenter.coordZ);
+  normaVetor = Math.sqrt(Math.pow(l[0], 2) + Math.pow(l[1], 2) + Math.pow(l[2], 2));
+
+  l[0] = l[0] / normaVetor;
+  l[1] = l[1] / normaVetor;
+  l[2] = l[2] / normaVetor;
+
+  return new point3d(l[0], l[1], l[2]);
+}
+
+function calculateId(normalVector, lVector){
+
+  let normalVectorTimesL = (normalVector.coordX * lVector.coordX) + (normalVector.coordY * lVector.coordY) + 
+  (normalVector.coordZ * lVector.coordZ) ;
+
+  return materialAndIlumination.il * materialAndIlumination.kd * normalVectorTimesL;
+}
+
+function calculateIs(normalVector, lVector, geometricCenter, vrp){
+  let temp = [];
+  let rVector = [];
+  let sVector = [];
+  let normaVetor;
+  let normalVectorTimesL = (normalVector.coordX * lVector.coordX) + (normalVector.coordY * lVector.coordY) + 
+  (normalVector.coordZ * lVector.coordZ) ;
+  normalVectorTimesL = normalVectorTimesL * 2;
+
+  temp.push(normalVectorTimesL*normalVector.coordX);
+  temp.push(normalVectorTimesL*normalVector.coordY);
+  temp.push(normalVectorTimesL*normalVector.coordZ);
+  
+  rVector.push(temp[0] - lVector.coordX);
+  rVector.push(temp[1] - lVector.coordY);
+  rVector.push(temp[2] - lVector.coordZ);
+
+  sVector.push(vrp.coordX - geometricCenter.coordX);
+  sVector.push(vrp.coordY - geometricCenter.coordY);
+  sVector.push(vrp.coordZ - geometricCenter.coordZ);
+
+  normaVetor = Math.sqrt(Math.pow(sVector[0], 2) + Math.pow(sVector[1], 2) + Math.pow(sVector[2], 2));
+
+  sVector[0] = sVector[0] / normaVetor;
+  sVector[1] = sVector[1] / normaVetor;
+  sVector[2] = sVector[2] / normaVetor;
+
+  let rTimesS = (rVector[0] * sVector[0]) + (rVector[1] * sVector[1]) + (rVector[2] * sVector[2]);
+
+  return materialAndIlumination.il * materialAndIlumination.ks * rTimesS;
+}
+
+function calculateIt(Ia, Id, Is){
+  return Ia + Id + Is;
+}
+
+function paintFaceFlatShadingFront(face, It, context){
+  context.fillStyle = "rgba("+120+","+120+","+120+","+(It/255)+")";
+
+  context.beginPath();
+  //may be different on the other vistas
+  context.moveTo(convertXtoCanvas(face.aresta1.point1.coordX), convertYtoCanvas(face.aresta1.point1.coordY));
+  context.lineTo(convertXtoCanvas(face.aresta1.point2.coordX), convertYtoCanvas(face.aresta1.point2.coordY));
+  context.lineTo(convertXtoCanvas(face.aresta4.point2.coordX), convertYtoCanvas(face.aresta4.point2.coordY));
+  context.lineTo(convertXtoCanvas(face.aresta3.point1.coordX), convertYtoCanvas(face.aresta3.point1.coordY));
+  context.lineTo(convertXtoCanvas(face.aresta2.point1.coordX), convertYtoCanvas(face.aresta2.point1.coordY));
+  context.closePath();
+  context.fill();
+}
+
+function paintFaceFlatShadingSide(face, It, context){
+  context.fillStyle = "rgba("+120+","+120+","+120+","+(It/255)+")";
+
+  context.beginPath();
+  //may be different on the other vistas
+  context.moveTo(convertXtoCanvas(face.aresta1.point1.coordZ), convertYtoCanvas(face.aresta1.point1.coordY));
+  context.lineTo(convertXtoCanvas(face.aresta1.point2.coordZ), convertYtoCanvas(face.aresta1.point2.coordY));
+  context.lineTo(convertXtoCanvas(face.aresta4.point2.coordZ), convertYtoCanvas(face.aresta4.point2.coordY));
+  context.lineTo(convertXtoCanvas(face.aresta3.point1.coordZ), convertYtoCanvas(face.aresta3.point1.coordY));
+  context.lineTo(convertXtoCanvas(face.aresta2.point1.coordZ), convertYtoCanvas(face.aresta2.point1.coordY));
+  context.closePath();
+  context.fill();
+}
+
+function paintFaceFlatShadingAbove(face, It, context){
+  context.fillStyle = "rgba("+120+","+120+","+120+","+(It/255)+")";
+
+  context.beginPath();
+  //may be different on the other vistas
+  context.moveTo(convertXtoCanvas(face.aresta1.point1.coordX), convertYtoCanvas(face.aresta1.point1.coordZ));
+  context.lineTo(convertXtoCanvas(face.aresta1.point2.coordX), convertYtoCanvas(face.aresta1.point2.coordZ));
+  context.lineTo(convertXtoCanvas(face.aresta4.point2.coordX), convertYtoCanvas(face.aresta4.point2.coordZ));
+  context.lineTo(convertXtoCanvas(face.aresta3.point1.coordX), convertYtoCanvas(face.aresta3.point1.coordZ));
+  context.lineTo(convertXtoCanvas(face.aresta2.point1.coordX), convertYtoCanvas(face.aresta2.point1.coordZ));
+  context.closePath();
+  context.fill();
+}
+
 function isIncreasingScale(lastX, lastY, currentX, currentY) {
   return (  Math.sqrt( Math.pow( ( Scene.objects[selectedObject].centerPoint.coordX - currentX), 2 ) + 
   Math.pow( (Scene.objects[selectedObject].centerPoint.coordY - currentY), 2) ) ) > 
@@ -975,6 +1302,16 @@ function drawLine(pointArray, context) {
   context.moveTo(pointArray[index-1].coordX, pointArray[index-1].coordY);
   context.lineTo(pointArray[index].coordX, pointArray[index].coordY);
   context.stroke();
+}
+
+function calculateVetorNormal(vetor1, vetor2) {
+  let vetorResultado = [];
+
+  vetorResultado.push( (vetor1[1] * vetor2[2]) - (vetor2[1] * vetor1[2]) );
+  vetorResultado.push( (vetor1[2] * vetor2[0]) - (vetor2[2] * vetor1[0]) );
+  vetorResultado.push( (vetor1[0] * vetor2[1]) - (vetor2[0] * vetor1[1]) );
+
+  return vetorResultado;
 }
 
 function setObjectData() {
@@ -1346,16 +1683,18 @@ function drawFrontVista() {
       }
     }
     frontContext.stroke();
-  } else {
+  } else if(withOcultation){
     //draw only the visible faces from the front
     drawFrontWithOcultation();
+  } 
+  if(flatShading) {
+    drawFrontFlatShading();
   }
-  
 }
 
 function drawFrontWithOcultation(){
   //debugger;
-  defineWhichFacesAreVisible(Camera.front, Camera.p);
+  defineWhichFacesAreVisible(Camera.front);
   frontContext.beginPath();
   //Camera.side;
   for (let i = 0; i < Scene.objects.length; i++) {
@@ -1388,6 +1727,37 @@ function drawFrontWithOcultation(){
   frontContext.stroke();
 }
 
+function drawFrontFlatShading(){
+  defineWhichFacesAreVisible(Camera.front);
+  let Ia = calculateIa();
+  let Is;
+
+  for(let i = 0; i < Scene.objects.length; i++){
+    for(let j = 0; j < Scene.objects[i].facesList.length; j++){
+      if(Scene.objects[i].facesList[j].visible){
+        let geometricCenter = calculateGeometricCenter(Scene.objects[i].facesList[j]);
+        let normalVector = returnVetorNormalNormalizado(Scene.objects[i].facesList[j]);
+        let lVector = calculateLVector(geometricCenter);
+        let Id = calculateId(normalVector, lVector);
+        //debugger;
+        if(Id > 0) {
+          Is = calculateIs(normalVector, lVector, geometricCenter, Camera.front);
+        }else{
+          Is = 0;
+        }
+
+        if(Is < 0) Is = 0;
+
+        let It = calculateIt(Ia, Id, Is);
+
+        paintFaceFlatShadingFront(Scene.objects[i].facesList[j], It, frontContext);
+
+      }
+    }
+  }
+
+}
+
 function drawSideVista() {
   sideContext.clearRect(0, 0, sideCanvas.width, sideCanvas.height);
   addMarkings(sideContext, sideCanvas);
@@ -1403,15 +1773,19 @@ function drawSideVista() {
       }
     }
     sideContext.stroke();
-  } else {
+  } else if(withOcultation){
     //draw only the visible faces from the side
     drawSideWithOcultation();
+  }
+
+  if(flatShading){
+    drawSideFlatShading();
   }
   
 }
 
 function drawSideWithOcultation(){
-  defineWhichFacesAreVisible(Camera.side, Camera.p);
+  defineWhichFacesAreVisible(Camera.side);
   sideContext.beginPath();
   //Camera.side;
   for (let i = 0; i < Scene.objects.length; i++) {
@@ -1444,13 +1818,46 @@ function drawSideWithOcultation(){
   sideContext.stroke();
 }
 
-function defineWhichFacesAreVisible(cameraPosition, p) {
+function drawSideFlatShading(){
+  
+  defineWhichFacesAreVisible(Camera.side);
+  let Ia = calculateIa();
+  let Is;
+
+  for(let i = 0; i < Scene.objects.length; i++){
+    for(let j = 0; j < Scene.objects[i].facesList.length; j++){
+      if(Scene.objects[i].facesList[j].visible){
+        let geometricCenter = calculateGeometricCenter(Scene.objects[i].facesList[j]);
+        let normalVector = returnVetorNormalNormalizado(Scene.objects[i].facesList[j]);
+        let lVector = calculateLVector(geometricCenter);
+        let Id = calculateId(normalVector, lVector);
+        //debugger;
+        if(Id > 0) {
+          Is = calculateIs(normalVector, lVector, geometricCenter, Camera.side);
+        }else{
+          Is = 0;
+        }
+
+        if(Is < 0) Is = 0;
+
+        let It = calculateIt(Ia, Id, Is);
+
+        paintFaceFlatShadingSide(Scene.objects[i].facesList[j], It, sideContext);
+
+      }
+    }
+  }
+
+}
+
+function defineWhichFacesAreVisible(cameraPosition) {
   
   let vetorNormalFace = [];
   let normaVetor; 
   let vetor1 = [];
   let vetor2 = [];
   let normal = [];
+  let p;
   //here p is always set in the same place because I only implemented side, front and above view, 
   //no perspective
   if(cameraPosition === Camera.front){
@@ -1473,7 +1880,7 @@ function defineWhichFacesAreVisible(cameraPosition, p) {
 
       vetorNormalFace = calculateVetorNormal(vetor1, vetor2);
 
-      normaVetor = Math.sqrt(Math.pow(vetorNormalFace[0], 2) + Math.pow(vetorNormalFace[1], 2), Math.pow(vetorNormalFace[2], 2));
+      normaVetor = Math.sqrt(Math.pow(vetorNormalFace[0], 2) + Math.pow(vetorNormalFace[1], 2) + Math.pow(vetorNormalFace[2], 2));
       
       //vetor unitario normalizado
       vetorNormalFace[0] = vetorNormalFace[0] / normaVetor;
@@ -1504,16 +1911,6 @@ function defineWhichFacesAreVisible(cameraPosition, p) {
   }
 }
 
-function calculateVetorNormal(vetor1, vetor2) {
-  let vetorResultado = [];
-
-  vetorResultado.push( (vetor1[1] * vetor2[2]) - (vetor2[1] * vetor1[2]) );
-  vetorResultado.push( (vetor1[2] * vetor2[0]) - (vetor2[2] * vetor1[0]) );
-  vetorResultado.push( (vetor1[0] * vetor2[1]) - (vetor2[0] * vetor1[1]) );
-
-  return vetorResultado;
-}
-
 function drawAboveVista() {
   aboveContext.clearRect(0, 0, aboveCanvas.width, aboveCanvas.height);
   addMarkings(aboveContext, aboveCanvas);
@@ -1529,15 +1926,19 @@ function drawAboveVista() {
       }
     }
     aboveContext.stroke();
-  } else {
+  } else if(withOcultation){
     //draw only the visible faces from above
     drawAboveWithOcultation();
+  }
+
+  if(flatShading){
+    drawAboveFlatShading();
   }
   
 }
 
 function drawAboveWithOcultation(){
-  defineWhichFacesAreVisible(Camera.above, Camera.p);
+  defineWhichFacesAreVisible(Camera.above);
   aboveContext.beginPath();
   
   for (let i = 0; i < Scene.objects.length; i++) {
@@ -1568,6 +1969,38 @@ function drawAboveWithOcultation(){
   }
 
   aboveContext.stroke();
+}
+
+function drawAboveFlatShading(){
+  
+  defineWhichFacesAreVisible(Camera.above);
+  let Ia = calculateIa();
+  let Is;
+
+  for(let i = 0; i < Scene.objects.length; i++){
+    for(let j = 0; j < Scene.objects[i].facesList.length; j++){
+      if(Scene.objects[i].facesList[j].visible){
+        let geometricCenter = calculateGeometricCenter(Scene.objects[i].facesList[j]);
+        let normalVector = returnVetorNormalNormalizado(Scene.objects[i].facesList[j]);
+        let lVector = calculateLVector(geometricCenter);
+        let Id = calculateId(normalVector, lVector);
+        //debugger;
+        if(Id > 0) {
+          Is = calculateIs(normalVector, lVector, geometricCenter, Camera.above);
+        }else{
+          Is = 0;
+        }
+
+        if(Is < 0) Is = 0;
+
+        let It = calculateIt(Ia, Id, Is);
+
+        paintFaceFlatShadingAbove(Scene.objects[i].facesList[j], It, aboveContext);
+
+      }
+    }
+  }
+
 }
 
 function executeTranslation(coordX, coordY, coordZ, objectIndex) {
@@ -1792,7 +2225,8 @@ const Camera = {
 
 const materialAndIlumination = {
   lightPos: new point3d(0, 0, 350),
-  lightInt: 150,
+  il: 150,
+  ila: 120,
   ka: 0.5,
   kd: 0.5,
   ks: 0.5,
