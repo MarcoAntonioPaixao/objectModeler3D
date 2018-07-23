@@ -14,6 +14,7 @@ const generateObjectButton = document.getElementById('generateObject');
 
 const noOcultationButton = document.getElementById('noOcultation');
 const withOcultationButton = document.getElementById('withOcultation');
+const flatShadingButton = document.getElementById('flatShading');
 
 const rotationAngleField = document.getElementById('revolutionRotationAngle');
 const rotationAxisField = document.getElementById('revolutionRotationAxis');
@@ -133,9 +134,13 @@ noOcultationButton.addEventListener('click', function() {
   noOcultation = true;
   noOcultationButton.classList.add('selected');
   noOcultationButton.classList.remove('shadow');
+
   withOcultation = false;
   withOcultationButton.classList.remove('selected');
   withOcultationButton.classList.add('shadow');
+  flatShading = false;
+  flatShadingButton.classList.remove('selected');
+  flatShadingButton.classList.add('shadow');
   cleanAllCanvas();
   drawAboveVista();
   drawFrontVista();
@@ -146,9 +151,30 @@ withOcultationButton.addEventListener('click', function() {
   withOcultation = true;
   withOcultationButton.classList.add('selected');
   withOcultationButton.classList.remove('shadow');
+
   noOcultation = false;
   noOcultationButton.classList.remove('selected');
   noOcultationButton.classList.add('shadow');
+  flatShading = false;
+  flatShadingButton.classList.remove('selected');
+  flatShadingButton.classList.add('shadow');
+  cleanAllCanvas();
+  drawAboveVista();
+  drawFrontVista();
+  drawSideVista();
+});
+
+flatShadingButton.addEventListener('click', function(){
+  flatShading = true;
+  flatShadingButton.classList.add('selected');
+  flatShadingButton.classList.remove('shadow');
+
+  noOcultation = false;
+  noOcultationButton.classList.remove('selected');
+  noOcultationButton.classList.add('shadow');
+  withOcultation = false;
+  withOcultationButton.classList.remove('selected');
+  withOcultationButton.classList.add('shadow');
   cleanAllCanvas();
   drawAboveVista();
   drawFrontVista();
@@ -1329,7 +1355,7 @@ function drawFrontVista() {
 
 function drawFrontWithOcultation(){
   //debugger;
-  defineWhichFacesAreVisible(Camera.front);
+  defineWhichFacesAreVisible(Camera.front, Camera.p);
   frontContext.beginPath();
   //Camera.side;
   for (let i = 0; i < Scene.objects.length; i++) {
@@ -1385,7 +1411,7 @@ function drawSideVista() {
 }
 
 function drawSideWithOcultation(){
-  defineWhichFacesAreVisible(Camera.side);
+  defineWhichFacesAreVisible(Camera.side, Camera.p);
   sideContext.beginPath();
   //Camera.side;
   for (let i = 0; i < Scene.objects.length; i++) {
@@ -1418,14 +1444,15 @@ function drawSideWithOcultation(){
   sideContext.stroke();
 }
 
-function defineWhichFacesAreVisible(cameraPosition) {
+function defineWhichFacesAreVisible(cameraPosition, p) {
   
   let vetorNormalFace = [];
   let normaVetor; 
   let vetor1 = [];
   let vetor2 = [];
   let normal = [];
-  let p;
+  //here p is always set in the same place because I only implemented side, front and above view, 
+  //no perspective
   if(cameraPosition === Camera.front){
     p = [0, 0, cameraPosition.coordZ * -1];
   }else if(cameraPosition === Camera.side){
@@ -1510,7 +1537,7 @@ function drawAboveVista() {
 }
 
 function drawAboveWithOcultation(){
-  defineWhichFacesAreVisible(Camera.above);
+  defineWhichFacesAreVisible(Camera.above, Camera.p);
   aboveContext.beginPath();
   
   for (let i = 0; i < Scene.objects.length; i++) {
@@ -1721,7 +1748,7 @@ function executeRotationX(angle, objectIndex) {
 }
 
 
-//initializing variables
+//initializing global variables
 let modeSelect = false;
 let modeDraw = true;
 let modeScale = false;
@@ -1735,6 +1762,7 @@ let selectedObject;
 let isDown = false;
 let withOcultation = false;
 let noOcultation = true;
+let flatShading = false;
 let loadedFromFile = false;
 
 //vertices from the 2d profile converted to 3d
@@ -1755,7 +1783,20 @@ let Scene = {
 const Camera = {
   front: new point3d(0, 0, 350),
   side: new point3d(350, 0, 0),
-  above: new point3d(0, -350, 0)
+  above: new point3d(0, -350, 0),
+  p: new point3d(0, 0, 0),
+  near: 350,
+  far: -350,
+  viewUp: new point3d(0, 0, 350)
+}
+
+const materialAndIlumination = {
+  lightPos: new point3d(0, 0, 350),
+  lightInt: 150,
+  ka: 0.5,
+  kd: 0.5,
+  ks: 0.5,
+  n: 2.5
 }
 
 //beginning execution when the page loads
