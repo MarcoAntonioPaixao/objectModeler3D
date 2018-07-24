@@ -33,7 +33,56 @@
       <input type="file" id="fileElem" style="display:none" onchange="handleFiles(this.files)">
       <button class="btn btn-warning shadow" id="loadScene">Usar outra Cena</button>
       <button class="btn btn-success shadow" id="newScene">Nova Cena</button>
+      <button class="btn btn-success shadow" id="showIluminationOptions">Opções de Iluminação</button>
     </div>
+  </div>
+
+  <div id="iluminationOptions" class="hide">
+    <div class="container-fluid row justify-content-center">
+      Opcoes de material: <br>
+      <input type="text" placeholder="ka" id="ka">
+      <input type="text" placeholder="kd" id="kd">
+      <input type="text" placeholder="ks" id="ks">
+      <input type="number" placeholder="n" id="n">
+    </div>
+
+    <div class="container-fluid row justify-content-center">
+        Posicao da luz: <br>
+        <input type="number" placeholder="x" id="lightX">
+        <input type="number" placeholder="y" id="lightY">
+        <input type="number" placeholder="z" id="lightZ">
+    </div>
+
+    <div class="container-fluid row justify-content-center">
+        Opcoes de luz: <br>
+        <input type="number" placeholder="il" id="lightIntensity">
+        <input type="number" placeholder="ila" id="ambientLightIntensity">
+    </div>
+
+    <!-- <div class="container-fluid row justify-content-center">
+        Posicao do observador: <br>
+        <input type="number" placeholder="x" id="cameraX">
+        <input type="number" placeholder="y" id="cameraY">
+        <input type="number" placeholder="z" id="cameraZ">
+    </div> -->
+
+    <!-- <div class="container-fluid row justify-content-center">
+        Opcoes de camera: <br>
+        <input type="number" placeholder="ponto de observacao" id="obsPoint">
+        <input type="number" placeholder="distancia ao plano de projecao" id="distanceToPlane">
+    </div> -->
+
+    <!-- <div class="container-fluid row justify-content-center">
+        Vetor View-Up: <br>
+        <input type="number" placeholder="x" id="viewUpX">
+        <input type="number" placeholder="y" id="viewUpY">
+        <input type="number" placeholder="z" id="viewUpZ">
+    </div> -->
+    <div class="container-fluid row justify-content-center">
+      <button class="btn btn-danger shadow" id="cancelIluminationChanges">Cancelar</button>
+      <button class="btn btn-success shadow" id="hideIluminationOptions">Confirmar Mudanças</button>
+    </div>
+    
   </div>
 
   <div id="objectDetails" class="hide">

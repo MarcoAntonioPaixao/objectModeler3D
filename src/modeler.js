@@ -9,6 +9,7 @@ const scaleButton = document.getElementById('scale');
 const saveSceneButton = document.getElementById('saveScene');
 const loadSceneButton = document.getElementById('loadScene');
 const newSceneButton = document.getElementById('newScene');
+const showIluminationOptions = document.getElementById('showIluminationOptions');
 const fileElem = document.getElementById('fileElem');
 const generateObjectButton = document.getElementById('generateObject');
 
@@ -19,6 +20,19 @@ const flatShadingButton = document.getElementById('flatShading');
 const rotationAngleField = document.getElementById('revolutionRotationAngle');
 const rotationAxisField = document.getElementById('revolutionRotationAxis');
 const numberSectionsField = document.getElementById('numberSections');
+
+const iluminationOptions = document.getElementById('iluminationOptions');
+const cancelIluminationChanges = document.getElementById('cancelIluminationChanges');
+const changeIluminationOptions = document.getElementById('hideIluminationOptions');
+const kaField = document.getElementById('ka');
+const kdField = document.getElementById('kd');
+const ksField = document.getElementById('ks');
+const nField = document.getElementById('n');
+const lightPosX = document.getElementById('lightX');
+const lightPosY = document.getElementById('lightY');
+const lightPosZ = document.getElementById('lightZ');
+const lightIntensity = document.getElementById('lightIntensity');
+const ambientLightIntensity = document.getElementById('ambientLightIntensity');
 
 const TOLERANCE_MARGIN = 100;
 
@@ -118,6 +132,75 @@ newSceneButton.addEventListener('click', function() {
   drawingOnSideCanvas = false;
   initial3dVertice = [];
   pointArray = [];
+});
+
+showIluminationOptions.addEventListener('click', function() {
+  iluminationOptions.classList.remove('hide');
+});
+
+changeIluminationOptions.addEventListener('click', function() {
+  debugger;
+
+  if(!(kaField.value === "" || kaField.value === null)){
+    materialAndIlumination.ka = parseFloat(kaField.value);
+    if(materialAndIlumination.ka > 1)
+      materialAndIlumination.ka = 1;
+    console.log('ka changed');
+  }
+
+  if(!(kdField.value === "" || kdField.value === null)){
+    materialAndIlumination.kd = parseFloat(kdField.value);
+    if(materialAndIlumination.kd > 1)
+      materialAndIlumination.kd = 1;
+    console.log('kd changed');
+  }
+
+  if(!(ksField.value === "" || ksField.value === null)){
+    console.log('ks changed');
+    materialAndIlumination.ks = parseFloat(ksField.value);
+    if(materialAndIlumination.ks > 1)
+      materialAndIlumination.ks = 1;
+  }
+
+  if(!(nField.value === "" || nField.value === null)){
+    console.log('n changed');
+    materialAndIlumination.n = parseInt(nField.value);
+  }
+
+  if(!(lightPosX.value === "" || lightPosX.value === null)){
+    console.log('lightPosX changed');
+    materialAndIlumination.lightPos.coordX = parseInt(lightPosX.value);
+  }
+
+  if(!(lightPosY.value === "" || lightPosY.value === null)){
+    console.log('lightPosY changed');
+    materialAndIlumination.lightPos.coordY = parseInt(lightPosY.value);
+  }
+
+  if(!(lightPosZ.value === "" || lightPosZ.value === null)){
+    console.log('lightPosZ changed');
+    materialAndIlumination.lightPos.coordZ = parseInt(lightPosZ.value);
+  }
+
+  if(!(lightIntensity.value === "" || lightIntensity.value === null)){
+    console.log('lightIntensity changed');
+    materialAndIlumination.il = parseInt(lightIntensity.value);
+  }
+
+  if(!(ambientLightIntensity.value === "" || ambientLightIntensity.value === null)){
+    console.log('ambientLightIntensity changed');
+    materialAndIlumination.ila = parseInt(ambientLightIntensity.value);
+  }
+
+  drawAboveVista();
+  drawFrontVista();
+  drawSideVista();
+
+  iluminationOptions.classList.add('hide');
+});
+
+cancelIluminationChanges.addEventListener('click', function() {
+  iluminationOptions.classList.add('hide');
 });
 
 function saveText(text, filename){
@@ -1147,9 +1230,13 @@ function paintFaceFlatShadingFront(face, It, context){
   //may be different on the other vistas
   context.moveTo(convertXtoCanvas(face.aresta1.point1.coordX), convertYtoCanvas(face.aresta1.point1.coordY));
   context.lineTo(convertXtoCanvas(face.aresta1.point2.coordX), convertYtoCanvas(face.aresta1.point2.coordY));
+  context.lineTo(convertXtoCanvas(face.aresta4.point1.coordX), convertYtoCanvas(face.aresta4.point1.coordY));
   context.lineTo(convertXtoCanvas(face.aresta4.point2.coordX), convertYtoCanvas(face.aresta4.point2.coordY));
+  context.lineTo(convertXtoCanvas(face.aresta3.point2.coordX), convertYtoCanvas(face.aresta3.point2.coordY));
   context.lineTo(convertXtoCanvas(face.aresta3.point1.coordX), convertYtoCanvas(face.aresta3.point1.coordY));
+  context.lineTo(convertXtoCanvas(face.aresta2.point2.coordX), convertYtoCanvas(face.aresta2.point2.coordY));
   context.lineTo(convertXtoCanvas(face.aresta2.point1.coordX), convertYtoCanvas(face.aresta2.point1.coordY));
+  
   context.closePath();
   context.fill();
 }
@@ -1161,8 +1248,11 @@ function paintFaceFlatShadingSide(face, It, context){
   //may be different on the other vistas
   context.moveTo(convertXtoCanvas(face.aresta1.point1.coordZ), convertYtoCanvas(face.aresta1.point1.coordY));
   context.lineTo(convertXtoCanvas(face.aresta1.point2.coordZ), convertYtoCanvas(face.aresta1.point2.coordY));
+  context.lineTo(convertXtoCanvas(face.aresta4.point1.coordZ), convertYtoCanvas(face.aresta4.point1.coordY));
   context.lineTo(convertXtoCanvas(face.aresta4.point2.coordZ), convertYtoCanvas(face.aresta4.point2.coordY));
+  context.lineTo(convertXtoCanvas(face.aresta3.point2.coordZ), convertYtoCanvas(face.aresta3.point2.coordY));
   context.lineTo(convertXtoCanvas(face.aresta3.point1.coordZ), convertYtoCanvas(face.aresta3.point1.coordY));
+  context.lineTo(convertXtoCanvas(face.aresta2.point2.coordZ), convertYtoCanvas(face.aresta2.point2.coordY));
   context.lineTo(convertXtoCanvas(face.aresta2.point1.coordZ), convertYtoCanvas(face.aresta2.point1.coordY));
   context.closePath();
   context.fill();
@@ -1175,8 +1265,11 @@ function paintFaceFlatShadingAbove(face, It, context){
   //may be different on the other vistas
   context.moveTo(convertXtoCanvas(face.aresta1.point1.coordX), convertYtoCanvas(face.aresta1.point1.coordZ));
   context.lineTo(convertXtoCanvas(face.aresta1.point2.coordX), convertYtoCanvas(face.aresta1.point2.coordZ));
+  context.lineTo(convertXtoCanvas(face.aresta4.point1.coordX), convertYtoCanvas(face.aresta4.point1.coordZ));
   context.lineTo(convertXtoCanvas(face.aresta4.point2.coordX), convertYtoCanvas(face.aresta4.point2.coordZ));
+  context.lineTo(convertXtoCanvas(face.aresta3.point2.coordX), convertYtoCanvas(face.aresta3.point2.coordZ));
   context.lineTo(convertXtoCanvas(face.aresta3.point1.coordX), convertYtoCanvas(face.aresta3.point1.coordZ));
+  context.lineTo(convertXtoCanvas(face.aresta2.point2.coordX), convertYtoCanvas(face.aresta2.point2.coordZ));
   context.lineTo(convertXtoCanvas(face.aresta2.point1.coordX), convertYtoCanvas(face.aresta2.point1.coordZ));
   context.closePath();
   context.fill();
@@ -1994,6 +2087,7 @@ function drawAboveFlatShading(){
         if(Is < 0) Is = 0;
 
         let It = calculateIt(Ia, Id, Is);
+
 
         paintFaceFlatShadingAbove(Scene.objects[i].facesList[j], It, aboveContext);
 
